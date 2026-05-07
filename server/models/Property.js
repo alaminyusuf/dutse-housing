@@ -1,3 +1,13 @@
+/**
+ * Property model schema.
+ * @typedef {Object} Property
+ * @property {string} title - Property title
+ * @property {string} houseNumber - House number
+ * @property {string} location - Property location
+ * @property {number} price - Price in USD
+ * @property {string} description - Description
+ * @property {Date} createdAt - Creation date
+ */
 const mongoose = require("mongoose");
 
 const PropertySchema = new mongoose.Schema({

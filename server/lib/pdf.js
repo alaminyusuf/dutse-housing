@@ -1,3 +1,11 @@
+/**
+ * Generates a PDF certificate for a completed order.
+ * @param {Object} params
+ * @param {string} params.orderId - Order ID
+ * @param {User} params.user - User object
+ * @param {Property} params.property - Property object
+ * @returns {Promise<string>} Resolves to file path of generated PDF
+ */
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");

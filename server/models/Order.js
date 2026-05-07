@@ -1,3 +1,14 @@
+/**
+ * Order model schema.
+ * @typedef {Object} Order
+ * @property {ObjectId} user - Reference to User
+ * @property {ObjectId} property - Reference to Property
+ * @property {number} amount - Purchase amount
+ * @property {string} status - Order status (pending|paid|failed)
+ * @property {string} stripeSessionId - Stripe session ID
+ * @property {string} pdfPath - Path to generated PDF
+ * @property {Date} createdAt - Order creation date
+ */
 const mongoose = require("mongoose");
 
 const OrderSchema = new mongoose.Schema({

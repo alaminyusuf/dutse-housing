@@ -1,3 +1,8 @@
+/**
+ * Connects to MongoDB using Mongoose.
+ * Exits process on failure.
+ * @module config/db
+ */
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
