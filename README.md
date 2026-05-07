@@ -1,6 +1,6 @@
 # Dutse Housing (MERN)
 
-![Workflow](docs/workflow.png)
+![Workflow](/Dutse_Housing.jpeg)
 
 > **Note:** This project is for development and demonstration purposes only. It
 > is not production-ready. Do not use as-is for real transactions or sensitive
