@@ -1,3 +1,7 @@
+/**
+ * Order routes for user purchases and PDF download.
+ * @module routes/orders
+ */
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
@@ -5,6 +9,9 @@ const Order = require("../models/Order");
 const fs = require("fs");
 const path = require("path");
 
+/**
+ * Middleware to authenticate user via JWT in Authorization header or ?token= query.
+ */
 function auth(req, res, next) {
 	// allow token via Authorization header or `?token=` query for direct browser downloads
 	let auth = req.headers.authorization;
@@ -23,7 +30,11 @@ function auth(req, res, next) {
 	}
 }
 
-// GET /api/orders/me
+/**
+ * Get all orders for the authenticated user.
+ * @route GET /api/orders/me
+ * @returns {Order[]}
+ */
 router.get("/me", auth, async (req, res) => {
 	try {
 		const orders = await Order.find({ user: req.userId }).populate(
@@ -36,7 +47,11 @@ router.get("/me", auth, async (req, res) => {
 	}
 });
 
-// GET /api/orders/:id/pdf - download pdf
+/**
+ * Download the PDF certificate for a specific order (must be owner).
+ * @route GET /api/orders/:id/pdf
+ * @returns {PDF file}
+ */
 router.get("/:id/pdf", auth, async (req, res) => {
 	try {
 		const order = await Order.findById(req.params.id).populate("property");

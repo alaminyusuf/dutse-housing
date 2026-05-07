@@ -1,8 +1,16 @@
+/**
+ * Property routes for listing and viewing properties.
+ * @module routes/properties
+ */
 const express = require("express");
 const router = express.Router();
 const Property = require("../models/Property");
 
-// GET /api/properties - list properties
+/**
+ * List all properties.
+ * @route GET /api/properties
+ * @returns {Property[]}
+ */
 router.get("/", async (req, res) => {
 	try {
 		const props = await Property.find().limit(50);
@@ -13,7 +21,11 @@ router.get("/", async (req, res) => {
 	}
 });
 
-// GET /api/properties/:id
+/**
+ * Get a single property by ID.
+ * @route GET /api/properties/:id
+ * @returns {Property}
+ */
 router.get("/:id", async (req, res) => {
 	try {
 		const prop = await Property.findById(req.params.id);

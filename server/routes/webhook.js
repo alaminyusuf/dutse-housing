@@ -1,3 +1,7 @@
+/**
+ * Stripe webhook endpoint for payment confirmation and PDF generation.
+ * @module routes/webhook
+ */
 const express = require("express");
 const router = express.Router({ rawBody: true });
 const stripe = require("stripe")(
@@ -8,7 +12,10 @@ const Property = require("../models/Property");
 const User = require("../models/User");
 const { generateCertificate } = require("../lib/pdf");
 
-// POST /api/webhook (Stripe webhook)
+/**
+ * Stripe webhook handler for checkout.session.completed.
+ * @route POST /api/webhook
+ */
 router.post(
 	"/",
 	express.raw({ type: "application/json" }),

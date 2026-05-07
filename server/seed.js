@@ -1,3 +1,9 @@
+dotenv.config();
+
+/**
+ * Seeds the database with sample properties for development/testing.
+ * @module seed
+ */
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
@@ -5,6 +11,9 @@ const Property = require("./models/Property");
 
 dotenv.config();
 
+/**
+ * Seed function: clears Property collection and inserts sample data.
+ */
 async function seed() {
 	await connectDB();
 	const sample = [

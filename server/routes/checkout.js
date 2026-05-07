@@ -1,3 +1,7 @@
+/**
+ * Checkout routes for Stripe payment session creation.
+ * @module routes/checkout
+ */
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
@@ -7,7 +11,11 @@ const stripe = require("stripe")(
 const Property = require("../models/Property");
 const Order = require("../models/Order");
 
-// helper to get user id from token (Authorization: Bearer <token>)
+/**
+ * Helper to extract user ID from JWT in Authorization header.
+ * @param {Request} req
+ * @returns {string|null}
+ */
 function getUserIdFromReq(req) {
 	const auth = req.headers.authorization;
 	if (!auth) return null;
@@ -21,7 +29,12 @@ function getUserIdFromReq(req) {
 	}
 }
 
-// POST /api/checkout/create-session
+/**
+ * Create a Stripe Checkout session for a property purchase.
+ * @route POST /api/checkout/create-session
+ * @body { propertyId }
+ * @returns { url, id }
+ */
 router.post("/create-session", async (req, res) => {
 	const { propertyId } = req.body;
 	const userId = getUserIdFromReq(req);

@@ -1,10 +1,19 @@
+/**
+ * Auth routes for user registration and login.
+ * @module routes/auth
+ */
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-// POST /api/auth/register
+/**
+ * Register a new user.
+ * @route POST /api/auth/register
+ * @body { name, email, password }
+ * @returns { token, user }
+ */
 router.post("/register", async (req, res) => {
 	const { name, email, password } = req.body;
 	if (!name || !email || !password)
@@ -31,7 +40,12 @@ router.post("/register", async (req, res) => {
 	}
 });
 
-// POST /api/auth/login
+/**
+ * Login a user.
+ * @route POST /api/auth/login
+ * @body { email, password }
+ * @returns { token, user }
+ */
 router.post("/login", async (req, res) => {
 	const { email, password } = req.body;
 	if (!email || !password)
