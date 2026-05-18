@@ -1,13 +1,10 @@
 /**
- * Checkout routes for Stripe payment session creation.
+ * Checkout routes for payment-cli integration.
  * @module routes/checkout
  */
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
-const stripe = require("stripe")(
-	process.env.STRIPE_SECRET_KEY || "sk_test_placeholder",
-);
 const Property = require("../models/Property");
 const Order = require("../models/Order");
 
@@ -30,43 +27,40 @@ function getUserIdFromReq(req) {
 }
 
 /**
- * Create a Stripe Checkout session for a property purchase.
+ * Create a checkout session for a property purchase via payment-cli.
  * @route POST /api/checkout/create-session
- * @body { propertyId }
+ * @body { propertyId, token }
  * @returns { url, id }
  */
 router.post("/create-session", async (req, res) => {
-	const { propertyId } = req.body;
+	const { propertyId, token } = req.body;
 	const userId = getUserIdFromReq(req);
 	if (!userId) return res.status(401).json({ message: "Unauthorized" });
+	if (!token) return res.status(400).json({ message: "Payment token is required" });
+
 	try {
 		const property = await Property.findById(propertyId);
 		if (!property)
 			return res.status(404).json({ message: "Property not found" });
 
-		const session = await stripe.checkout.sessions.create({
-			payment_method_types: ["card"],
-			mode: "payment",
-			line_items: [
-				{
-					price_data: {
-						currency: "usd",
-						product_data: {
-							name: property.title,
-							description: `${property.houseNumber} - ${property.location}`,
-						},
-						unit_amount: Math.round(property.price * 100),
-					},
-					quantity: 1,
-				},
-			],
-			success_url: `${process.env.CLIENT_URL || "http://localhost:3000"}/success?session_id={CHECKOUT_SESSION_ID}`,
-			cancel_url: `${process.env.CLIENT_URL || "http://localhost:3000"}/cancel`,
-			metadata: {
+		// Call the local payment-cli Koa server to handle the transaction
+		const response = await fetch("http://localhost:3000/checkout/create-session", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				token,
 				userId: userId.toString(),
 				propertyId: property._id.toString(),
-			},
+				amount: Math.round(property.price * 100), // convert dollars to cents
+			}),
 		});
+
+		if (!response.ok) {
+			const errData = await response.json().catch(() => ({}));
+			return res.status(400).json({ message: errData.error || "Payment processing error" });
+		}
+
+		const session = await response.json(); // { id: sessionId, url: redirectUrl }
 
 		// create order (pending)
 		const order = new Order({
@@ -80,8 +74,8 @@ router.post("/create-session", async (req, res) => {
 
 		res.json({ url: session.url, id: session.id });
 	} catch (err) {
-		console.error(err);
-		res.status(500).json({ message: "Server error" });
+		console.error("Checkout integration error:", err);
+		res.status(500).json({ message: "Payment service connection error" });
 	}
 });
 
