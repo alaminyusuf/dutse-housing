@@ -34,33 +34,47 @@ export default function Property() {
 		}
 	};
 
-	if (!prop) return <div>Loading...</div>;
+	if (!prop) return <div style={{ textAlign: "center", marginTop: 40 }}>Loading...</div>;
 
 	return (
-		<div>
-			<Link to="/" style={{ display: "inline-block", marginBottom: "16px" }}>&larr; Back to Home</Link>
-			<h2>{prop.title}</h2>
-			<p>
-				{prop.houseNumber} — {prop.location}
-			</p>
-			<p style={{ fontWeight: "bold", fontSize: "1.2rem" }}>${prop.price.toLocaleString()}</p>
-			<p>{prop.description}</p>
+		<div className="details-container">
+			<Link to="/" style={{ display: "inline-block", marginBottom: "24px", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+				&larr; Back to Listings
+			</Link>
 			
-			<div style={{ margin: "20px 0" }}>
-				<label htmlFor="paymentToken" style={{ display: "block", marginBottom: 8, fontWeight: "bold" }}>
-					Enter Payment Token to Purchase:
-				</label>
-				<input
-					id="paymentToken"
-					type="text"
-					placeholder="tok_..."
-					value={paymentToken}
-					onChange={(e) => setPaymentToken(e.target.value)}
-					style={{ width: "320px", padding: "8px", boxSizing: "border-box" }}
-				/>
+			<h2 className="header-title" style={{ marginBottom: 8 }}>{prop.title}</h2>
+			<div className="sub-header" style={{ marginBottom: 24 }}>
+				House Number: {prop.houseNumber} &bull; Location: {prop.location}
 			</div>
 
-			<button onClick={buy}>Buy with Token</button>
+			<div className="property-price" style={{ fontSize: "1.75rem", marginBottom: 24 }}>
+				${prop.price.toLocaleString()}
+			</div>
+
+			<div style={{ lineHeight: 1.6, color: "var(--text-secondary)", marginBottom: 32 }}>
+				{prop.description || "No description provided for this premium property."}
+			</div>
+			
+			<div style={{ borderTop: "1px solid var(--border-color)", paddingTop: 32 }}>
+				<div className="form-group">
+					<label htmlFor="paymentToken" className="form-label">
+						Enter Simulated Payment Token to Purchase:
+					</label>
+					<input
+						id="paymentToken"
+						type="text"
+						placeholder="tok_..."
+						value={paymentToken}
+						onChange={(e) => setPaymentToken(e.target.value)}
+						className="form-input"
+						style={{ maxWidth: "360px", display: "block" }}
+					/>
+				</div>
+
+				<button onClick={buy} className="btn" style={{ width: "100%", maxWidth: "360px", marginTop: 8 }}>
+					Buy Property
+				</button>
+			</div>
 		</div>
 	);
 }
