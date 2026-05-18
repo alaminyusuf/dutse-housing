@@ -1,3 +1,5 @@
+import { readDb, writeDb } from "../utils/db";
+
 export type PaymentRecord = {
 	id: string;
 	amount: number; // cents
@@ -7,19 +9,21 @@ export type PaymentRecord = {
 };
 
 class PaymentStoreClass {
-	private payments: PaymentRecord[] = [];
-
 	create(data: PaymentRecord) {
-		this.payments.push(data);
+		const db = readDb();
+		db.payments.push(data);
+		writeDb(db);
 		return data;
 	}
 
 	findById(id: string) {
-		return this.payments.find((p) => p.id === id);
+		const db = readDb();
+		return db.payments.find((p) => p.id === id);
 	}
 
 	all() {
-		return this.payments.slice();
+		const db = readDb();
+		return db.payments.slice();
 	}
 }
 

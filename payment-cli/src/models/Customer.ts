@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { readDb, writeDb } from "../utils/db";
 
 export type CustomerRecord = {
 	id: string;
@@ -8,25 +9,36 @@ export type CustomerRecord = {
 };
 
 class CustomerStoreClass {
-	private customers: CustomerRecord[] = [];
-
 	create(data: { name: string; email: string; balance: number }) {
+		const db = readDb();
 		const c: CustomerRecord = {
 			id: `cus_${uuidv4()}`,
 			name: data.name,
 			email: data.email,
 			balance: data.balance,
 		};
-		this.customers.push(c);
+		db.customers.push(c);
+		writeDb(db);
 		return c;
 	}
 
 	findByEmailOrId(key: string) {
-		return this.customers.find((c) => c.email === key || c.id === key);
+		const db = readDb();
+		return db.customers.find((c) => c.email === key || c.id === key);
 	}
 
 	all() {
-		return this.customers.slice();
+		const db = readDb();
+		return db.customers.slice();
+	}
+
+	update(customer: CustomerRecord) {
+		const db = readDb();
+		const idx = db.customers.findIndex((c) => c.id === customer.id);
+		if (idx !== -1) {
+			db.customers[idx] = customer;
+			writeDb(db);
+		}
 	}
 }
 
