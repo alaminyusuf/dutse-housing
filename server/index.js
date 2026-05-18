@@ -1,5 +1,3 @@
-dotenv.config();
-
 /**
  * Main entry point for Dutse Housing Express server.
  * Sets up middleware, connects to MongoDB, and mounts all API routes.

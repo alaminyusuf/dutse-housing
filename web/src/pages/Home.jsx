@@ -4,12 +4,23 @@ import axios from "axios";
 
 export default function Home() {
 	const [propsList, setPropsList] = useState([]);
-	useEffect(() => {
-		axios
+	const fetchProps = async () => {
+
+		try{
+			const {data} = await axios
 			.get("/api/properties")
-			.then((res) => setPropsList(res.data))
-			.catch(console.error);
+			setPropsList(data)
+			
+		} catch(e){
+			console.error(e)
+		}
+	}
+	useEffect(() => {
+		fetchProps()
 	}, []);
+	if(propsList.length< 1){
+		<h1>NO Property available</h1>
+	}
 	return (
 		<div>
 			<h2>Available Properties</h2>

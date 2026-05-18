@@ -1,5 +1,3 @@
-dotenv.config();
-
 /**
  * Seeds the database with sample properties for development/testing.
  * @module seed
