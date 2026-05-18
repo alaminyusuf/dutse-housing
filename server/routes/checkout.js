@@ -28,16 +28,16 @@ function getUserIdFromReq(req) {
 }
 
 /**
- * Create a checkout session for a property purchase via payment-cli.
+ * Create a checkout session for a property purchase via payment-cli 4-digit PIN.
  * @route POST /api/checkout/create-session
- * @body { propertyId, token }
+ * @body { propertyId, pin }
  * @returns { url, id }
  */
 router.post("/create-session", async (req, res) => {
-	const { propertyId, token } = req.body;
+	const { propertyId, pin } = req.body;
 	const userId = getUserIdFromReq(req);
 	if (!userId) return res.status(401).json({ message: "Unauthorized" });
-	if (!token) return res.status(400).json({ message: "Payment token is required" });
+	if (!pin) return res.status(400).json({ message: "Payment PIN is required" });
 
 	try {
 		const property = await Property.findById(propertyId);
@@ -62,7 +62,7 @@ router.post("/create-session", async (req, res) => {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				token,
+				pin,
 				userId: userId.toString(),
 				propertyId: property._id.toString(),
 				amount: Math.round(property.price * 100), // convert dollars to cents
@@ -81,7 +81,6 @@ router.post("/create-session", async (req, res) => {
 		res.json({ url: session.url, id: session.id });
 	} catch (err) {
 		console.error("Checkout integration error:", err);
-		// Cleanup order if failed midway
 		res.status(500).json({ message: "Payment service connection error" });
 	}
 });

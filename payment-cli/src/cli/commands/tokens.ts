@@ -4,7 +4,7 @@ import { TokenStore } from "../../models/Token";
 
 const cmd = new Command("tokens");
 
-cmd.description("Manage customer payment tokens")
+cmd.description("Manage customer payment tokens and PINs")
 	.command("generate")
 	.requiredOption("--customer <emailOrId>")
 	.action((opts) => {
@@ -34,9 +34,12 @@ cmd.description("Manage customer payment tokens")
 		}
 
 		const tokenRecord = tokenStore.create({ customerId: customer.id });
-		console.log("Token generated successfully!");
-		console.log(`Token: ${tokenRecord.token}`);
-		console.log(`Owner: ${customer.name} (${customer.email})`);
+		console.log("=========================================");
+		console.log("Token & PIN generated successfully!");
+		console.log(`PIN (4-Digit): ${tokenRecord.pin}  <-- USE THIS FOR CHECKOUT`);
+		console.log(`Token:        ${tokenRecord.token}`);
+		console.log(`Owner:        ${customer.name} (${customer.email})`);
+		console.log("=========================================");
 	});
 
 cmd.command("list")
@@ -46,15 +49,15 @@ cmd.command("list")
 		const tokens = tokenStore.all();
 
 		if (tokens.length === 0) {
-			console.log("No tokens generated yet.");
+			console.log("No tokens or PINs generated yet.");
 			return;
 		}
 
-		console.log("Generated Tokens:");
+		console.log("Generated Tokens & PINs:");
 		tokens.forEach((t) => {
 			const customer = customerStore.findByEmailOrId(t.customerId);
 			const ownerInfo = customer ? `${customer.name} (${customer.email})` : t.customerId;
-			console.log(`- Token: ${t.token} | Status: ${t.status} | Owner: ${ownerInfo} | Created: ${t.createdAt}`);
+			console.log(`- PIN: ${t.pin} | Token: ${t.token} | Status: ${t.status} | Owner: ${ownerInfo} | Created: ${t.createdAt}`);
 		});
 	});
 

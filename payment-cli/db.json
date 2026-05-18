@@ -4,7 +4,7 @@
       "id": "cus_6527d672-880b-407e-9d28-4afca47150d7",
       "name": "Alice",
       "email": "alice@example.com",
-      "balance": 10000000
+      "balance": 5000000
     }
   ],
   "payments": [
@@ -17,6 +17,13 @@
     },
     {
       "id": "pi_748ae01e25e84261",
+      "amount": 5000000,
+      "currency": "usd",
+      "status": "succeeded",
+      "customerId": "cus_6527d672-880b-407e-9d28-4afca47150d7"
+    },
+    {
+      "id": "pi_8180b21863514da7",
       "amount": 5000000,
       "currency": "usd",
       "status": "succeeded",
@@ -35,6 +42,13 @@
       "customerId": "cus_6527d672-880b-407e-9d28-4afca47150d7",
       "status": "used",
       "createdAt": "2026-05-18T13:26:03.126Z"
+    },
+    {
+      "token": "tok_299fd4aadb2748be",
+      "customerId": "cus_6527d672-880b-407e-9d28-4afca47150d7",
+      "status": "used",
+      "createdAt": "2026-05-18T13:44:54.408Z",
+      "pin": "3465"
     }
   ]
 }

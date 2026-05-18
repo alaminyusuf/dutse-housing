@@ -34,11 +34,11 @@ export function createServer({
 	});
 
 	router.post("/checkout/create-session", async (ctx) => {
-		const { token, userId, propertyId, amount, sessionId: reqSessionId } = (ctx.request as any).body;
+		const { pin, userId, propertyId, amount, sessionId: reqSessionId } = (ctx.request as any).body;
 
-		if (!token || !userId || !propertyId || !amount) {
+		if (!pin || !userId || !propertyId || !amount) {
 			ctx.status = 400;
-			ctx.body = { error: "Missing required fields: token, userId, propertyId, amount" };
+			ctx.body = { error: "Missing required fields: pin, userId, propertyId, amount" };
 			return;
 		}
 
@@ -46,17 +46,11 @@ export function createServer({
 		const customerStore = CustomerStore.getInstance();
 		const paymentStore = PaymentStore.getInstance();
 
-		// 1. Find token
-		const tokenRecord = tokenStore.findByToken(token);
+		// 1. Find token by 4-digit PIN
+		const tokenRecord = tokenStore.findByPin(pin);
 		if (!tokenRecord) {
 			ctx.status = 400;
-			ctx.body = { error: "Invalid payment token" };
-			return;
-		}
-
-		if (tokenRecord.status !== "unused") {
-			ctx.status = 400;
-			ctx.body = { error: "Payment token has already been used" };
+			ctx.body = { error: "Invalid payment PIN or PIN already used" };
 			return;
 		}
 

@@ -6,7 +6,7 @@ export default function Property() {
 	const { id } = useParams();
 	const [prop, setProp] = useState(null);
 	const [token, setToken] = useState(localStorage.getItem("token"));
-	const [paymentToken, setPaymentToken] = useState("");
+	const [paymentPin, setPaymentPin] = useState("");
 
 	useEffect(() => {
 		axios
@@ -17,12 +17,15 @@ export default function Property() {
 
 	const buy = async () => {
 		if (!token) return alert("Please login/register first");
-		if (!paymentToken) return alert("Please enter a Payment Token");
+		if (!paymentPin) return alert("Please enter your 4-Digit Payment PIN");
+		if (paymentPin.length !== 4 || isNaN(Number(paymentPin))) {
+			return alert("Please enter a valid 4-digit numeric PIN (e.g. 1234)");
+		}
 
 		try {
 			const res = await axios.post(
 				"/api/checkout/create-session",
-				{ propertyId: id, token: paymentToken },
+				{ propertyId: id, pin: paymentPin },
 				{ headers: { Authorization: `Bearer ${token}` } },
 			);
 			if (res.data && res.data.url) {
@@ -57,17 +60,18 @@ export default function Property() {
 			
 			<div style={{ borderTop: "1px solid var(--border-color)", paddingTop: 32 }}>
 				<div className="form-group">
-					<label htmlFor="paymentToken" className="form-label">
-						Enter Simulated Payment Token to Purchase:
+					<label htmlFor="paymentPin" className="form-label">
+						Enter 4-Digit Payment PIN:
 					</label>
 					<input
-						id="paymentToken"
+						id="paymentPin"
 						type="text"
-						placeholder="tok_..."
-						value={paymentToken}
-						onChange={(e) => setPaymentToken(e.target.value)}
+						maxLength={4}
+						placeholder="1234"
+						value={paymentPin}
+						onChange={(e) => setPaymentPin(e.target.value.replace(/\D/g, ""))}
 						className="form-input"
-						style={{ maxWidth: "360px", display: "block" }}
+						style={{ maxWidth: "200px", display: "block", letterSpacing: "0.2em", fontSize: "1.2rem", textAlign: "center" }}
 					/>
 				</div>
 

@@ -6,16 +6,30 @@ export type TokenRecord = {
 	customerId: string;
 	status: "unused" | "used";
 	createdAt: string;
+	pin: string;
 };
 
 class TokenStoreClass {
 	create(data: { customerId: string }) {
 		const db = readDb();
+
+		// Generate a unique 4-digit PIN among all active (unused) tokens
+		let pin = "";
+		let isUnique = false;
+		while (!isUnique) {
+			pin = Math.floor(1000 + Math.random() * 9000).toString();
+			const exists = db.tokens.some((t) => t.pin === pin && t.status === "unused");
+			if (!exists) {
+				isUnique = true;
+			}
+		}
+
 		const t: TokenRecord = {
 			token: `tok_${uuidv4().replace(/-/g, "").substring(0, 16)}`,
 			customerId: data.customerId,
 			status: "unused",
 			createdAt: new Date().toISOString(),
+			pin,
 		};
 		db.tokens.push(t);
 		writeDb(db);
@@ -25,6 +39,11 @@ class TokenStoreClass {
 	findByToken(token: string) {
 		const db = readDb();
 		return db.tokens.find((t) => t.token === token);
+	}
+
+	findByPin(pin: string) {
+		const db = readDb();
+		return db.tokens.find((t) => t.pin === pin && t.status === "unused");
 	}
 
 	findActiveByCustomerId(customerId: string) {
