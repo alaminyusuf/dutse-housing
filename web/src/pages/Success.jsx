@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 export default function Success() {
 	return (
@@ -8,7 +9,7 @@ export default function Success() {
 				Your purchase was successful. The certificate will be available on
 				your dashboard shortly.
 			</p>
-			<a href="/dashboard">Go to Dashboard</a>
+			<Link to="/dashboard">Go to Dashboard</Link>
 		</div>
 	);
 }

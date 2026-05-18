@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 export default function Cancel() {
 	return (
@@ -8,7 +9,7 @@ export default function Cancel() {
 				Your payment was cancelled. You can try again from the property
 				page.
 			</p>
-			<a href="/">Back to Home</a>
+			<Link to="/">Back to Home</Link>
 		</div>
 	);
 }
