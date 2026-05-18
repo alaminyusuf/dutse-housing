@@ -8,7 +8,7 @@ cmd.description("Start the webhook simulator server")
 	.option(
 		"-t, --target <url>",
 		"target webhook URL to forward events to",
-		"http://localhost:8080/webhooks",
+		"http://localhost:5000/api/webhook",
 	)
 	.option("--db <path>", "sqlite database path (optional)")
 	.action((opts) => {
