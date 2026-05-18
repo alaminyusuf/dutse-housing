@@ -5,6 +5,7 @@
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const Property = require("../models/Property");
 const Order = require("../models/Order");
 
@@ -43,6 +44,19 @@ router.post("/create-session", async (req, res) => {
 		if (!property)
 			return res.status(404).json({ message: "Property not found" });
 
+		// Generate session ID beforehand to prevent race conditions in webhook processing
+		const sessionId = `cs_test_${crypto.randomUUID().replace(/-/g, "")}`;
+
+		// Create and save pending order first so the webhook handler can immediately find it
+		const order = new Order({
+			user: userId,
+			property: property._id,
+			amount: property.price,
+			status: "pending",
+			stripeSessionId: sessionId,
+		});
+		await order.save();
+
 		// Call the local payment-cli Koa server to handle the transaction
 		const response = await fetch("http://localhost:3000/checkout/create-session", {
 			method: "POST",
@@ -52,29 +66,22 @@ router.post("/create-session", async (req, res) => {
 				userId: userId.toString(),
 				propertyId: property._id.toString(),
 				amount: Math.round(property.price * 100), // convert dollars to cents
+				sessionId,
 			}),
 		});
 
 		if (!response.ok) {
 			const errData = await response.json().catch(() => ({}));
+			// Delete the pending order if the payment process failed
+			await Order.deleteOne({ _id: order._id });
 			return res.status(400).json({ message: errData.error || "Payment processing error" });
 		}
 
 		const session = await response.json(); // { id: sessionId, url: redirectUrl }
-
-		// create order (pending)
-		const order = new Order({
-			user: userId,
-			property: property._id,
-			amount: property.price,
-			status: "pending",
-			stripeSessionId: session.id,
-		});
-		await order.save();
-
 		res.json({ url: session.url, id: session.id });
 	} catch (err) {
 		console.error("Checkout integration error:", err);
+		// Cleanup order if failed midway
 		res.status(500).json({ message: "Payment service connection error" });
 	}
 });

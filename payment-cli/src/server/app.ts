@@ -34,7 +34,7 @@ export function createServer({
 	});
 
 	router.post("/checkout/create-session", async (ctx) => {
-		const { token, userId, propertyId, amount } = (ctx.request as any).body;
+		const { token, userId, propertyId, amount, sessionId: reqSessionId } = (ctx.request as any).body;
 
 		if (!token || !userId || !propertyId || !amount) {
 			ctx.status = 400;
@@ -93,7 +93,8 @@ export function createServer({
 			customerId: customer.id,
 		});
 
-		const sessionId = `cs_test_${uuidv4().replace(/-/g, "").substring(0, 20)}`;
+		// Use passed sessionId if present, otherwise generate new one
+		const sessionId = reqSessionId || `cs_test_${uuidv4().replace(/-/g, "").substring(0, 20)}`;
 
 		// 5. Build and fire webhook event
 		const webhookPayload = {

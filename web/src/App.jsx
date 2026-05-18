@@ -5,6 +5,8 @@ import Property from "./pages/Property";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import Success from "./pages/Success";
+import Cancel from "./pages/Cancel";
 
 export default function App() {
 	const handleLogout = () => {
@@ -42,6 +44,8 @@ export default function App() {
 					<Route path="/register" element={<Register />} />
 					<Route path="/login" element={<Login />} />
 					<Route path="/dashboard" element={<Dashboard />} />
+					<Route path="/success" element={<Success />} />
+					<Route path="/cancel" element={<Cancel />} />
 				</Routes>
 			</main>
 		</div>
