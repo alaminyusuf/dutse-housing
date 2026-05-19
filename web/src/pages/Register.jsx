@@ -18,6 +18,7 @@ export default function Register() {
 			});
 			if (res.data.token) {
 				localStorage.setItem("token", res.data.token);
+				localStorage.setItem("role", res.data.user.role || "user");
 				// Full reload to update navbar state cleanly
 				window.location.href = "/dashboard";
 			}

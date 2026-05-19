@@ -13,6 +13,7 @@ export default function Login() {
 			const res = await axios.post("/api/auth/login", { email, password });
 			if (res.data.token) {
 				localStorage.setItem("token", res.data.token);
+				localStorage.setItem("role", res.data.user.role || "user");
 				// Full reload to update navbar state cleanly
 				window.location.href = "/dashboard";
 			}
