@@ -123,6 +123,52 @@ export function createServer({
 		};
 	});
 
+	/**
+	 * Admin Route: Generate / Top-up simulated customer balances.
+	 * @route POST /admin/generate-balance
+	 * @body { email, balance } (balance in cents)
+	 */
+	router.post("/admin/generate-balance", async (ctx) => {
+		const { email, balance } = (ctx.request as any).body;
+
+		if (!email || balance === undefined || isNaN(Number(balance))) {
+			ctx.status = 400;
+			ctx.body = { error: "Missing or invalid email or balance" };
+			return;
+		}
+
+		const customerStore = CustomerStore.getInstance();
+		const balanceCents = Math.round(Number(balance));
+
+		// Find or create customer
+		let customer = customerStore.findByEmailOrId(email);
+		if (customer) {
+			customer.balance += balanceCents;
+			customerStore.update(customer);
+		} else {
+			// Extract a friendly name from email prefix
+			const prefix = email.split("@")[0];
+			const friendlyName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+			
+			customer = customerStore.create({
+				name: friendlyName,
+				email,
+				balance: balanceCents,
+			});
+		}
+
+		ctx.status = 200;
+		ctx.body = {
+			message: "Balance generated successfully",
+			customer: {
+				id: customer.id,
+				name: customer.name,
+				email: customer.email,
+				balance: customer.balance,
+			},
+		};
+	});
+
 	app.use(router.routes());
 	app.use(router.allowedMethods());
 
