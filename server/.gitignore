@@ -9,6 +9,4 @@ coverage
 *.bak
 *.tmp
 *.swp
-server/storage/*
-.gemini/
-payment-cli/db.json
+storage
