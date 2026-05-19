@@ -37,7 +37,8 @@ router.post("/create-session", async (req, res) => {
 	const { propertyId, pin } = req.body;
 	const userId = getUserIdFromReq(req);
 	if (!userId) return res.status(401).json({ message: "Unauthorized" });
-	if (!pin) return res.status(400).json({ message: "Payment PIN is required" });
+	if (!pin)
+		return res.status(400).json({ message: "Payment PIN is required" });
 
 	try {
 		const property = await Property.findById(propertyId);
@@ -58,24 +59,31 @@ router.post("/create-session", async (req, res) => {
 		await order.save();
 
 		// Call the local payment-cli Koa server to handle the transaction
-		const response = await fetch("http://localhost:3000/checkout/create-session", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				pin,
-				userId: userId.toString(),
-				propertyId: property._id.toString(),
-				amount: Math.round(property.price * 100), // convert dollars to cents
-				sessionId,
-			}),
-		});
+		const response = await fetch(
+			"http://localhost:3000/checkout/create-session",
+			{
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					pin,
+					userId: userId.toString(),
+					propertyId: property._id.toString(),
+					amount: Math.round(property.price * 100), // convert dollars to cents
+					sessionId,
+				}),
+			},
+		);
 
 		if (!response.ok) {
 			const errData = await response.json().catch(() => ({}));
 			// Delete the pending order if the payment process failed
 			await Order.deleteOne({ _id: order._id });
-			return res.status(400).json({ message: errData.error || "Payment processing error" });
+			return res
+				.status(400)
+				.json({ message: errData.error || "Payment processing error" });
 		}
+
+		await Property.findByIdAndUpdate(property._id, { sold: true }); // Update status to sold immediately to prevent double purchases before webhook confirmation
 
 		const session = await response.json(); // { id: sessionId, url: redirectUrl }
 		res.json({ url: session.url, id: session.id });

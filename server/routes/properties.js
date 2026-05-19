@@ -32,12 +32,18 @@ const upload = multer({
 	fileFilter: (req, file, cb) => {
 		// Filter file formats to images only
 		const allowedTypes = /jpeg|jpg|png|webp|gif/;
-		const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+		const extname = allowedTypes.test(
+			path.extname(file.originalname).toLowerCase(),
+		);
 		const mimetype = allowedTypes.test(file.mimetype);
 		if (extname && mimetype) {
 			return cb(null, true);
 		}
-		cb(new Error("Only image formats are allowed (jpeg, jpg, png, webp, gif)"));
+		cb(
+			new Error(
+				"Only image formats are allowed (jpeg, jpg, png, webp, gif)",
+			),
+		);
 	},
 	limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
@@ -49,7 +55,8 @@ const upload = multer({
  */
 router.get("/", async (req, res) => {
 	try {
-		const props = await Property.find().limit(50);
+		// Return only properties that are not sold to prevent re-purchase
+		const props = await Property.find({ sold: false }).limit(50);
 		res.json(props);
 	} catch (err) {
 		console.error(err);
@@ -84,7 +91,9 @@ router.get("/:id", async (req, res) => {
 router.post("/", auth, admin, upload.single("coverImage"), async (req, res) => {
 	const { title, houseNumber, location, price, description } = req.body;
 	if (!title || !houseNumber || !location || !price) {
-		return res.status(400).json({ message: "Missing required listing fields" });
+		return res
+			.status(400)
+			.json({ message: "Missing required listing fields" });
 	}
 
 	try {

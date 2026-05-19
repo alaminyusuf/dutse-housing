@@ -18,6 +18,7 @@ const PropertySchema = new mongoose.Schema({
 	price: { type: Number, required: true },
 	description: { type: String },
 	coverImage: { type: String },
+	sold: { type: Boolean, default: false },
 	createdAt: { type: Date, default: Date.now },
 });
 

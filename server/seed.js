@@ -16,7 +16,7 @@ dotenv.config();
  */
 async function seed() {
 	await connectDB();
-	
+
 	const sampleProperties = [
 		{
 			title: "Cozy Bungalow",
@@ -61,7 +61,9 @@ async function seed() {
 			role: "admin",
 		});
 		await adminUser.save();
-		console.log("Seeded system administrator successfully (admin@example.com / adminpassword)");
+		console.log(
+			"Seeded system administrator successfully (admin@example.com / adminpassword)",
+		);
 
 		process.exit(0);
 	} catch (err) {
