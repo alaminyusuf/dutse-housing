@@ -41,6 +41,7 @@ app.use("/api/properties", require("./routes/properties"));
 app.use("/api/checkout", require("./routes/checkout"));
 app.use("/api/webhook", require("./routes/webhook"));
 app.use("/api/orders", require("./routes/orders"));
+app.use("/api/admin", require("./routes/admin"));
 
 // Health check route
 app.get("/", (req, res) => res.send("Dutse Housing API"));

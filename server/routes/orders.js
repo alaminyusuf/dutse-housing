@@ -9,26 +9,7 @@ const Order = require("../models/Order");
 const fs = require("fs");
 const path = require("path");
 
-/**
- * Middleware to authenticate user via JWT in Authorization header or ?token= query.
- */
-function auth(req, res, next) {
-	// allow token via Authorization header or `?token=` query for direct browser downloads
-	let auth = req.headers.authorization;
-	if (!auth && req.query && req.query.token)
-		auth = `Bearer ${req.query.token}`;
-	if (!auth) return res.status(401).json({ message: "Unauthorized" });
-	const parts = auth.split(" ");
-	if (parts.length !== 2)
-		return res.status(401).json({ message: "Unauthorized" });
-	try {
-		const decoded = jwt.verify(parts[1], process.env.JWT_SECRET || "secret");
-		req.userId = decoded.id;
-		next();
-	} catch (err) {
-		return res.status(401).json({ message: "Unauthorized" });
-	}
-}
+const auth = require("../middleware/auth");
 
 /**
  * Get all orders for the authenticated user.
