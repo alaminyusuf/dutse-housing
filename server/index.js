@@ -8,6 +8,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const morgan = require("morgan");
+const path = require("path");
 const connectDB = require("./config/db");
 
 dotenv.config();
@@ -25,6 +26,9 @@ app.use(
 app.use(cors({ origin: process.env.CLIENT_URL || true, credentials: true }));
 // Log HTTP requests
 app.use(morgan("dev"));
+
+// Serve static assets from storage directory
+app.use("/storage", express.static(path.join(__dirname, "storage")));
 
 const PORT = process.env.PORT || 5000;
 
