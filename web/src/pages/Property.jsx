@@ -44,6 +44,15 @@ export default function Property() {
 			<Link to="/" style={{ display: "inline-block", marginBottom: "24px", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
 				&larr; Back to Listings
 			</Link>
+
+			{/* Premium Property cover image */}
+			<div className="property-detail-image" style={{ width: "100%", height: "350px", borderRadius: "16px", overflow: "hidden", marginBottom: "32px", backgroundColor: "rgba(0,0,0,0.03)" }}>
+				<img 
+					src={prop.coverImage ? `http://localhost:5000${prop.coverImage}` : "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1200&q=80"} 
+					alt={prop.title} 
+					style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+				/>
+			</div>
 			
 			<h2 className="header-title" style={{ marginBottom: 8 }}>{prop.title}</h2>
 			<div className="sub-header" style={{ marginBottom: 24 }}>
