@@ -6,6 +6,7 @@
  * @property {string} location - Property location
  * @property {number} price - Price in USD
  * @property {string} description - Description
+ * @property {string} coverImage - Relational path to the cover image resource (static upload)
  * @property {Date} createdAt - Creation date
  */
 const mongoose = require("mongoose");
@@ -16,6 +17,7 @@ const PropertySchema = new mongoose.Schema({
 	location: { type: String, required: true },
 	price: { type: Number, required: true },
 	description: { type: String },
+	coverImage: { type: String },
 	createdAt: { type: Date, default: Date.now },
 });
 
