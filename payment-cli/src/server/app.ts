@@ -2,7 +2,6 @@ import Koa from "koa";
 import Router from "@koa/router";
 import bodyParser from "koa-bodyparser";
 import { sendWebhook } from "./webhook-sender";
-import { TokenStore } from "../models/Token";
 import { CustomerStore } from "../models/Customer";
 import { PaymentStore } from "../models/Payment";
 import { v4 as uuidv4 } from "uuid";
@@ -50,25 +49,14 @@ export function createServer({
 			return;
 		}
 
-		const tokenStore = TokenStore.getInstance();
 		const customerStore = CustomerStore.getInstance();
 		const paymentStore = PaymentStore.getInstance();
 
-		// 1. Find token by 4-digit PIN (stores are async now)
-		const tokenRecord = (await tokenStore.findByPin(pin)) as any;
-		if (!tokenRecord) {
-			ctx.status = 400;
-			ctx.body = { error: "Invalid payment PIN or PIN already used" };
-			return;
-		}
-
-		// 2. Find customer
-		const customer = (await customerStore.findByEmailOrId(
-			tokenRecord.customerId,
-		)) as any;
+		// Find customer directly by provided userId (token flow removed)
+		const customer = (await customerStore.findByEmailOrId(userId)) as any;
 		if (!customer) {
 			ctx.status = 400;
-			ctx.body = { error: "Customer not found for this token" };
+			ctx.body = { error: "Customer not found" };
 			return;
 		}
 
@@ -84,9 +72,6 @@ export function createServer({
 		// 4. Process payment
 		customer.balance -= amount;
 		await customerStore.update(customer as any);
-
-		tokenRecord.status = "used";
-		await tokenStore.update(tokenRecord as any);
 
 		const paymentId = `pi_${uuidv4().replace(/-/g, "").substring(0, 16)}`;
 		await paymentStore.create({

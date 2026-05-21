@@ -8,7 +8,6 @@ const bcrypt = require("bcryptjs");
 const connectDB = require("./config/db");
 const Property = require("./models/Property");
 const User = require("./models/User");
-const Token = require("./models/Token");
 const Order = require("./models/Order");
 
 dotenv.config();
@@ -23,7 +22,6 @@ async function seed() {
 		await Property.deleteMany({});
 		await Order.deleteMany({});
 		await User.deleteMany({});
-		await Token.deleteMany({});
 		// Seed administrator user
 		const adminEmail = "admin@example.com";
 		const salt = await bcrypt.genSalt(10);

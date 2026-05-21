@@ -1,6 +1,6 @@
 /**
  * Token routes replaced by Deposit Request workflow.
- * Endpoint: POST /api/tokens/generate
+ * Endpoint: POST /api/deposit/generate
  * Body: { amount, pin } — creates a DepositRequest (amount in USD) for admin approval.
  */
 const express = require("express");

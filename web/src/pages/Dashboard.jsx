@@ -48,7 +48,7 @@ export default function Dashboard() {
 		setReqLoading(true);
 		try {
 			const res = await axios.post(
-				"/api/tokens/generate",
+				"/api/deposit/generate",
 				{ amount: Math.round(amt * 100), pin: reqPin },
 				{ withCredentials: true },
 			);

@@ -45,9 +45,9 @@ app.use("/api/checkout", require("./routes/checkout"));
 app.use("/api/webhook", require("./routes/webhook"));
 app.use("/api/orders", require("./routes/orders"));
 app.use("/api/admin", require("./routes/admin"));
-// Token and payments endpoints for PIN/token workflow
-app.use("/api/tokens", require("./routes/tokens"));
+// Payments and deposit endpoints
 app.use("/api/payments", require("./routes/payments"));
+app.use("/api/deposit", require("./routes/deposit"));
 
 // Health check route
 app.get("/", (req, res) => res.send("Dutse Housing API"));
