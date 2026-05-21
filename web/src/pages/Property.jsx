@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export default function Property() {
@@ -7,6 +7,7 @@ export default function Property() {
 	const [prop, setProp] = useState(null);
 	const [token, setToken] = useState(localStorage.getItem("token"));
 	const [paymentPin, setPaymentPin] = useState("");
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		axios
@@ -24,50 +25,93 @@ export default function Property() {
 
 		try {
 			const res = await axios.post(
-				"/api/checkout/create-session",
+				"/api/payments/charge",
 				{ propertyId: id, pin: paymentPin },
 				{ headers: { Authorization: `Bearer ${token}` } },
 			);
-			if (res.data && res.data.url) {
-				window.location.href = res.data.url;
+			console.log("Redirecting to payment URL:", res.data);
+			if (res.data && res.data.message) {
+				navigate("/success");
 			}
 		} catch (err) {
 			console.error(err);
-			alert(err.response?.data?.message || "Checkout error occurred");
+			navigate("/cancel");
 		}
 	};
 
-	if (!prop) return <div style={{ textAlign: "center", marginTop: 40 }}>Loading...</div>;
+	if (!prop)
+		return (
+			<div style={{ textAlign: "center", marginTop: 40 }}>Loading...</div>
+		);
 
 	return (
 		<div className="details-container">
-			<Link to="/" style={{ display: "inline-block", marginBottom: "24px", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+			<Link
+				to="/"
+				style={{
+					display: "inline-block",
+					marginBottom: "24px",
+					fontSize: "0.9rem",
+					color: "var(--text-secondary)",
+				}}
+			>
 				&larr; Back to Listings
 			</Link>
 
 			{/* Premium Property cover image */}
-			<div className="property-detail-image" style={{ width: "100%", height: "350px", borderRadius: "16px", overflow: "hidden", marginBottom: "32px", backgroundColor: "rgba(0,0,0,0.03)" }}>
-				<img 
-					src={prop.coverImage ? `http://localhost:5000${prop.coverImage}` : "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1200&q=80"} 
-					alt={prop.title} 
-					style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+			<div
+				className="property-detail-image"
+				style={{
+					width: "100%",
+					height: "350px",
+					borderRadius: "16px",
+					overflow: "hidden",
+					marginBottom: "32px",
+					backgroundColor: "rgba(0,0,0,0.03)",
+				}}
+			>
+				<img
+					src={
+						prop.coverImage
+							? `http://localhost:5000${prop.coverImage}`
+							: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1200&q=80"
+					}
+					alt={prop.title}
+					style={{ width: "100%", height: "100%", objectFit: "cover" }}
 				/>
 			</div>
-			
-			<h2 className="header-title" style={{ marginBottom: 8 }}>{prop.title}</h2>
+
+			<h2 className="header-title" style={{ marginBottom: 8 }}>
+				{prop.title}
+			</h2>
 			<div className="sub-header" style={{ marginBottom: 24 }}>
 				House Number: {prop.houseNumber} &bull; Location: {prop.location}
 			</div>
 
-			<div className="property-price" style={{ fontSize: "1.75rem", marginBottom: 24 }}>
+			<div
+				className="property-price"
+				style={{ fontSize: "1.75rem", marginBottom: 24 }}
+			>
 				${prop.price.toLocaleString()}
 			</div>
 
-			<div style={{ lineHeight: 1.6, color: "var(--text-secondary)", marginBottom: 32 }}>
-				{prop.description || "No description provided for this premium property."}
+			<div
+				style={{
+					lineHeight: 1.6,
+					color: "var(--text-secondary)",
+					marginBottom: 32,
+				}}
+			>
+				{prop.description ||
+					"No description provided for this premium property."}
 			</div>
-			
-			<div style={{ borderTop: "1px solid var(--border-color)", paddingTop: 32 }}>
+
+			<div
+				style={{
+					borderTop: "1px solid var(--border-color)",
+					paddingTop: 32,
+				}}
+			>
 				<div className="form-group">
 					<label htmlFor="paymentPin" className="form-label">
 						Enter 4-Digit Payment PIN:
@@ -78,13 +122,25 @@ export default function Property() {
 						maxLength={4}
 						placeholder="1234"
 						value={paymentPin}
-						onChange={(e) => setPaymentPin(e.target.value.replace(/\D/g, ""))}
+						onChange={(e) =>
+							setPaymentPin(e.target.value.replace(/\D/g, ""))
+						}
 						className="form-input"
-						style={{ maxWidth: "200px", display: "block", letterSpacing: "0.2em", fontSize: "1.2rem", textAlign: "center" }}
+						style={{
+							maxWidth: "200px",
+							display: "block",
+							letterSpacing: "0.2em",
+							fontSize: "1.2rem",
+							textAlign: "center",
+						}}
 					/>
 				</div>
 
-				<button onClick={buy} className="btn" style={{ width: "100%", maxWidth: "360px", marginTop: 8 }}>
+				<button
+					onClick={buy}
+					className="btn"
+					style={{ width: "100%", maxWidth: "360px", marginTop: 8 }}
+				>
 					Buy Property
 				</button>
 			</div>

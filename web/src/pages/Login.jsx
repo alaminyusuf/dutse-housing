@@ -10,12 +10,16 @@ export default function Login() {
 	const submit = async (e) => {
 		e.preventDefault();
 		try {
-			const res = await axios.post("/api/auth/login", { email, password });
-			if (res.data.token) {
-				localStorage.setItem("token", res.data.token);
-				localStorage.setItem("role", res.data.user.role || "user");
-				// Full reload to update navbar state cleanly
+			const res = await axios.post(
+				"/api/auth/login",
+				{ email, password },
+				{ withCredentials: true },
+			);
+			// Redirect and let App fetch /api/auth/me to populate UI
+			if (res.status === 200 && res.data.user.role === "user") {
 				window.location.href = "/dashboard";
+			} else if (res.status === 200 && res.data.user.role === "admin") {
+				window.location.href = "/admin";
 			}
 		} catch (err) {
 			console.error(err);
@@ -25,14 +29,28 @@ export default function Login() {
 
 	return (
 		<div className="form-container">
-			<h2 className="header-title" style={{ textAlign: "center", marginBottom: 8 }}>Sign In</h2>
-			<p className="sub-header" style={{ textAlign: "center", marginBottom: 28, fontSize: "0.9rem" }}>
+			<h2
+				className="header-title"
+				style={{ textAlign: "center", marginBottom: 8 }}
+			>
+				Sign In
+			</h2>
+			<p
+				className="sub-header"
+				style={{
+					textAlign: "center",
+					marginBottom: 28,
+					fontSize: "0.9rem",
+				}}
+			>
 				Enter your details to access your account.
 			</p>
-			
+
 			<form onSubmit={submit}>
 				<div className="form-group">
-					<label htmlFor="email" className="form-label">Email Address</label>
+					<label htmlFor="email" className="form-label">
+						Email Address
+					</label>
 					<input
 						id="email"
 						type="email"
@@ -44,7 +62,9 @@ export default function Login() {
 					/>
 				</div>
 				<div className="form-group" style={{ marginBottom: 28 }}>
-					<label htmlFor="password" className="form-label">Password</label>
+					<label htmlFor="password" className="form-label">
+						Password
+					</label>
 					<input
 						id="password"
 						type="password"
@@ -59,9 +79,22 @@ export default function Login() {
 					Sign In
 				</button>
 			</form>
-			
-			<div style={{ marginTop: 24, textAlign: "center", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-				Don't have an account? <Link to="/register" style={{ color: "var(--text-primary)", fontWeight: 600 }}>Sign up</Link>
+
+			<div
+				style={{
+					marginTop: 24,
+					textAlign: "center",
+					fontSize: "0.9rem",
+					color: "var(--text-secondary)",
+				}}
+			>
+				Don't have an account?{" "}
+				<Link
+					to="/register"
+					style={{ color: "var(--text-primary)", fontWeight: 600 }}
+				>
+					Sign up
+				</Link>
 			</div>
 		</div>
 	);

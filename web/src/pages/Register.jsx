@@ -11,17 +11,12 @@ export default function Register() {
 	const submit = async (e) => {
 		e.preventDefault();
 		try {
-			const res = await axios.post("/api/auth/register", {
-				name,
-				email,
-				password,
-			});
-			if (res.data.token) {
-				localStorage.setItem("token", res.data.token);
-				localStorage.setItem("role", res.data.user.role || "user");
-				// Full reload to update navbar state cleanly
-				window.location.href = "/dashboard";
-			}
+			const res = await axios.post(
+				"/api/auth/register",
+				{ name, email, password },
+				{ withCredentials: true },
+			);
+			if (res.status === 200) window.location.href = "/dashboard";
 		} catch (err) {
 			console.error(err);
 			alert(err.response?.data?.message || "Registration failed");
@@ -30,14 +25,28 @@ export default function Register() {
 
 	return (
 		<div className="form-container">
-			<h2 className="header-title" style={{ textAlign: "center", marginBottom: 8 }}>Create Account</h2>
-			<p className="sub-header" style={{ textAlign: "center", marginBottom: 28, fontSize: "0.9rem" }}>
+			<h2
+				className="header-title"
+				style={{ textAlign: "center", marginBottom: 8 }}
+			>
+				Create Account
+			</h2>
+			<p
+				className="sub-header"
+				style={{
+					textAlign: "center",
+					marginBottom: 28,
+					fontSize: "0.9rem",
+				}}
+			>
 				Join Dutse Housing to purchase verified premium properties.
 			</p>
-			
+
 			<form onSubmit={submit}>
 				<div className="form-group">
-					<label htmlFor="name" className="form-label">Full Name</label>
+					<label htmlFor="name" className="form-label">
+						Full Name
+					</label>
 					<input
 						id="name"
 						placeholder="Jane Doe"
@@ -48,7 +57,9 @@ export default function Register() {
 					/>
 				</div>
 				<div className="form-group">
-					<label htmlFor="email" className="form-label">Email Address</label>
+					<label htmlFor="email" className="form-label">
+						Email Address
+					</label>
 					<input
 						id="email"
 						type="email"
@@ -60,7 +71,9 @@ export default function Register() {
 					/>
 				</div>
 				<div className="form-group" style={{ marginBottom: 28 }}>
-					<label htmlFor="password" className="form-label">Password</label>
+					<label htmlFor="password" className="form-label">
+						Password
+					</label>
 					<input
 						id="password"
 						type="password"
@@ -75,9 +88,22 @@ export default function Register() {
 					Sign Up
 				</button>
 			</form>
-			
-			<div style={{ marginTop: 24, textAlign: "center", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-				Already have an account? <Link to="/login" style={{ color: "var(--text-primary)", fontWeight: 600 }}>Sign in</Link>
+
+			<div
+				style={{
+					marginTop: 24,
+					textAlign: "center",
+					fontSize: "0.9rem",
+					color: "var(--text-secondary)",
+				}}
+			>
+				Already have an account?{" "}
+				<Link
+					to="/login"
+					style={{ color: "var(--text-primary)", fontWeight: 600 }}
+				>
+					Sign in
+				</Link>
 			</div>
 		</div>
 	);

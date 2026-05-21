@@ -2,12 +2,14 @@
  * Seeds the database with sample properties and default System Administrator.
  * @module seed
  */
-const mongoose = require("mongoose");
+
 const dotenv = require("dotenv");
 const bcrypt = require("bcryptjs");
 const connectDB = require("./config/db");
 const Property = require("./models/Property");
 const User = require("./models/User");
+const Token = require("./models/Token");
+const Order = require("./models/Order");
 
 dotenv.config();
 
@@ -17,40 +19,13 @@ dotenv.config();
 async function seed() {
 	await connectDB();
 
-	const sampleProperties = [
-		{
-			title: "Cozy Bungalow",
-			houseNumber: "A-101",
-			location: "Dutse",
-			price: 50000,
-			description: "A small cozy bungalow.",
-		},
-		{
-			title: "Modern Villa",
-			houseNumber: "B-202",
-			location: "Dutse",
-			price: 150000,
-			description: "Spacious modern villa with garden.",
-		},
-		{
-			title: "Downtown Apartment",
-			houseNumber: "C-303",
-			location: "Dutse",
-			price: 80000,
-			description: "Apartment in the heart of town.",
-		},
-	];
-
 	try {
-		// Seed properties
 		await Property.deleteMany({});
-		await Property.insertMany(sampleProperties);
-		console.log("Seeded properties successfully");
-
+		await Order.deleteMany({});
+		await User.deleteMany({});
+		await Token.deleteMany({});
 		// Seed administrator user
 		const adminEmail = "admin@example.com";
-		await User.deleteMany({ email: adminEmail });
-
 		const salt = await bcrypt.genSalt(10);
 		const hashedPassword = await bcrypt.hash("adminpassword", salt);
 

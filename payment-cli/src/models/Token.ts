@@ -1,73 +1,87 @@
-import { readDb, writeDb } from "../utils/db";
+import { connectMongo, mongoose } from "../utils/db";
 import { v4 as uuidv4 } from "uuid";
 
 export type TokenRecord = {
 	token: string;
 	customerId: string;
-	status: "unused" | "used";
-	createdAt: string;
+	status: "string";
+	createdAt: Date;
 	pin: string;
 };
 
+const schema = new mongoose.Schema(
+	{
+		token: String,
+		customerId: String,
+		status: { type: String, default: "unused" },
+		createdAt: Date,
+		pin: String,
+	},
+	{ collection: "cli_tokens" },
+);
+
+let TokenModel: mongoose.Model<any>;
+
 class TokenStoreClass {
-	create(data: { customerId: string }) {
-		const db = readDb();
+	async ensure() {
+		if (!TokenModel) {
+			await connectMongo();
+			TokenModel =
+				mongoose.models.CliToken || mongoose.model("CliToken", schema);
+		}
+	}
 
-		// Generate a unique 4-digit PIN among all active (unused) tokens
+	async create(data: { customerId: string }) {
+		await this.ensure();
+		// generate unique 4-digit pin among unused
 		let pin = "";
-		let isUnique = false;
-		while (!isUnique) {
+		while (true) {
 			pin = Math.floor(1000 + Math.random() * 9000).toString();
-			const exists = db.tokens.some((t) => t.pin === pin && t.status === "unused");
-			if (!exists) {
-				isUnique = true;
-			}
+			const exists = await TokenModel.findOne({
+				pin,
+				status: "unused",
+			}).lean();
+			if (!exists) break;
 		}
-
-		const t: TokenRecord = {
-			token: `tok_${uuidv4().replace(/-/g, "").substring(0, 16)}`,
+		const token = `tok_${uuidv4().replace(/-/g, "").substring(0, 16)}`;
+		const doc = await TokenModel.create({
+			token,
 			customerId: data.customerId,
-			status: "unused",
-			createdAt: new Date().toISOString(),
 			pin,
-		};
-		db.tokens.push(t);
-		writeDb(db);
-		return t;
+			status: "unused",
+			createdAt: new Date(),
+		});
+		return doc.toObject();
 	}
 
-	findByToken(token: string) {
-		const db = readDb();
-		return db.tokens.find((t) => t.token === token);
+	async findByToken(token: string) {
+		await this.ensure();
+		return TokenModel.findOne({ token }).lean();
 	}
 
-	findByPin(pin: string) {
-		const db = readDb();
-		return db.tokens.find((t) => t.pin === pin && t.status === "unused");
+	async findByPin(pin: string) {
+		await this.ensure();
+		return TokenModel.findOne({ pin, status: "unused" }).lean();
 	}
 
-	findActiveByCustomerId(customerId: string) {
-		const db = readDb();
-		return db.tokens.filter((t) => t.customerId === customerId && t.status === "unused");
+	async findActiveByCustomerId(customerId: string) {
+		await this.ensure();
+		return TokenModel.find({ customerId, status: "unused" }).lean();
 	}
 
-	findAllByCustomerId(customerId: string) {
-		const db = readDb();
-		return db.tokens.filter((t) => t.customerId === customerId);
+	async findAllByCustomerId(customerId: string) {
+		await this.ensure();
+		return TokenModel.find({ customerId }).lean();
 	}
 
-	all() {
-		const db = readDb();
-		return db.tokens.slice();
+	async all() {
+		await this.ensure();
+		return TokenModel.find().lean();
 	}
 
-	update(token: TokenRecord) {
-		const db = readDb();
-		const idx = db.tokens.findIndex((t) => t.token === token.token);
-		if (idx !== -1) {
-			db.tokens[idx] = token;
-			writeDb(db);
-		}
+	async update(tokenRec: TokenRecord) {
+		await this.ensure();
+		await TokenModel.updateOne({ token: tokenRec.token }, { $set: tokenRec });
 	}
 }
 

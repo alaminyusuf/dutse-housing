@@ -1,30 +1,31 @@
 /**
  * Authentication middleware.
  * Verifies JWT from Authorization header or URL token queries.
- * 
+ *
  * @module middleware/auth
  */
 const jwt = require("jsonwebtoken");
 
 function auth(req, res, next) {
-	let authHeader = req.headers.authorization;
-	// Allow token via query for direct media/PDF downloads if needed
-	if (!authHeader && req.query && req.query.token) {
-		authHeader = `Bearer ${req.query.token}`;
-	}
-	if (!authHeader) {
+	// Check Authorization header, query token, or HTTP cookie 'token'
+	let token = null;
+
+	token =
+		req.cookies.token ||
+		(req.headers.authorization && req.headers.authorization.split(" ")[1]);
+
+	if (!token)
 		return res.status(401).json({ message: "Unauthorized: Missing token" });
-	}
-	const parts = authHeader.split(" ");
-	if (parts.length !== 2) {
-		return res.status(401).json({ message: "Unauthorized: Invalid token format" });
-	}
+
 	try {
-		const decoded = jwt.verify(parts[1], process.env.JWT_SECRET || "secret");
+		const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret");
 		req.userId = decoded.id;
 		next();
 	} catch (err) {
-		return res.status(401).json({ message: "Unauthorized: Token verification failed" });
+		console.log(err);
+		return res
+			.status(401)
+			.json({ message: "Unauthorized: Token verification failed" });
 	}
 }
 

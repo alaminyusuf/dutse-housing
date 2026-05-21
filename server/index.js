@@ -8,6 +8,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const morgan = require("morgan");
+const cookieParser = require("cookie-parser");
 const path = require("path");
 const connectDB = require("./config/db");
 
@@ -24,6 +25,8 @@ app.use(
 );
 // Enable CORS for client
 app.use(cors({ origin: process.env.CLIENT_URL || true, credentials: true }));
+// Parse cookies for cookie-based auth
+app.use(cookieParser());
 // Log HTTP requests
 app.use(morgan("dev"));
 
@@ -42,6 +45,9 @@ app.use("/api/checkout", require("./routes/checkout"));
 app.use("/api/webhook", require("./routes/webhook"));
 app.use("/api/orders", require("./routes/orders"));
 app.use("/api/admin", require("./routes/admin"));
+// Token and payments endpoints for PIN/token workflow
+app.use("/api/tokens", require("./routes/tokens"));
+app.use("/api/payments", require("./routes/payments"));
 
 // Health check route
 app.get("/", (req, res) => res.send("Dutse Housing API"));

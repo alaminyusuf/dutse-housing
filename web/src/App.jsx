@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
 import Property from "./pages/Property";
@@ -10,37 +10,76 @@ import Success from "./pages/Success";
 import Cancel from "./pages/Cancel";
 
 export default function App() {
-	const handleLogout = () => {
-		localStorage.removeItem("token");
-		localStorage.removeItem("role");
+	const [user, setUser] = useState(null);
+
+	useEffect(() => {
+		// attempt to fetch current user via cookie-based auth
+		fetch("/api/auth/me", { credentials: "include" })
+			.then((r) => {
+				if (!r.ok) throw new Error("no user");
+				return r.json();
+			})
+			.then((data) => setUser(data))
+			.catch(() => setUser(null));
+	}, []);
+
+	const handleLogout = async () => {
+		await fetch("/api/auth/logout", {
+			method: "POST",
+			credentials: "include",
+		});
+		setUser(null);
 		window.location.href = "/login";
 	};
 
-	const hasToken = !!localStorage.getItem("token");
-	const isAdmin = localStorage.getItem("role") === "admin";
+	const hasToken = !!user;
+	const isAdmin = user && user.role === "admin";
 
 	return (
 		<div className="app-container">
 			<nav className="navbar">
-				<Link to="/" className="nav-brand">Dutse Housing</Link>
+				<Link to="/" className="nav-brand">
+					Dutse Housing
+				</Link>
 				<div className="nav-links">
-					<Link to="/" className="nav-link">Properties</Link>
+					<Link to="/" className="nav-link">
+						Properties
+					</Link>
 					{hasToken ? (
 						<>
 							{isAdmin && (
-								<Link to="/admin" className="nav-link" style={{ fontWeight: 600, color: "var(--accent-color)" }}>
+								<Link
+									to="/admin"
+									className="nav-link"
+									style={{
+										fontWeight: 600,
+										color: "var(--accent-color)",
+									}}
+								>
 									Admin Panel
 								</Link>
 							)}
-							<Link to="/dashboard" className="nav-link">Dashboard</Link>
-							<button onClick={handleLogout} className="btn btn-secondary" style={{ marginLeft: 8 }}>
+							{!isAdmin && (
+								<Link to="/dashboard" className="nav-link">
+									Dashboard
+								</Link>
+							)}
+							<button
+								onClick={handleLogout}
+								className="btn btn-secondary"
+								style={{ marginLeft: 8 }}
+							>
 								Logout
 							</button>
 						</>
 					) : (
 						<>
-							<Link to="/login" className="nav-link">Login</Link>
-							<Link to="/register" className="btn">Register</Link>
+							<Link to="/login" className="nav-link">
+								Login
+							</Link>
+							<Link to="/register" className="btn">
+								Register
+							</Link>
 						</>
 					)}
 				</div>

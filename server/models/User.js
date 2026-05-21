@@ -14,6 +14,12 @@ const UserSchema = new mongoose.Schema({
 	email: { type: String, required: true, unique: true },
 	password: { type: String, required: true },
 	role: { type: String, enum: ["user", "admin"], default: "user" },
+	// Hashed 4-digit PIN for quick payment authorization (not plaintext)
+	pinHash: { type: String },
+	// Indicates whether the user has set a PIN (defaults false)
+	pinSet: { type: Boolean, default: false },
+	// Optional account balance in cents for token-based payments
+	balance: { type: Number, default: 0 },
 	createdAt: { type: Date, default: Date.now },
 });
 

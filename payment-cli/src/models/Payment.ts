@@ -1,4 +1,4 @@
-import { readDb, writeDb } from "../utils/db";
+import { connectMongo, mongoose } from "../utils/db";
 
 export type PaymentRecord = {
 	id: string;
@@ -8,22 +8,42 @@ export type PaymentRecord = {
 	customerId: string;
 };
 
+const schema = new mongoose.Schema(
+	{
+		id: String,
+		amount: Number,
+		currency: String,
+		status: String,
+		customerId: String,
+	},
+	{ collection: "payments" },
+);
+
+let PaymentModel: mongoose.Model<any>;
+
 class PaymentStoreClass {
-	create(data: PaymentRecord) {
-		const db = readDb();
-		db.payments.push(data);
-		writeDb(db);
-		return data;
+	async ensure() {
+		if (!PaymentModel) {
+			await connectMongo();
+			PaymentModel =
+				mongoose.models.CliPayment || mongoose.model("CliPayment", schema);
+		}
 	}
 
-	findById(id: string) {
-		const db = readDb();
-		return db.payments.find((p) => p.id === id);
+	async create(data: PaymentRecord) {
+		await this.ensure();
+		const doc = await PaymentModel.create(data);
+		return doc.toObject();
 	}
 
-	all() {
-		const db = readDb();
-		return db.payments.slice();
+	async findById(id: string) {
+		await this.ensure();
+		return PaymentModel.findOne({ id }).lean();
+	}
+
+	async all() {
+		await this.ensure();
+		return PaymentModel.find().lean();
 	}
 }
 

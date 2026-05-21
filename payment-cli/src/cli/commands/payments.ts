@@ -21,19 +21,25 @@ cmd.description("Simulate payments")
 		const amountCents = Math.round(Number(opts.amount) * 100);
 		const store = PaymentStore.getInstance();
 		const customers = CustomerStore.getInstance();
-		const customer = customers.findByEmailOrId(opts.customer);
+		const customer = (await customers.findByEmailOrId(opts.customer)) as any;
 		if (!customer) {
 			console.error("Customer not found:", opts.customer);
 			process.exit(1);
 		}
 
-		const payment = store.create({
-			id: `pi_${uuidv4()}`,
+		const paymentId = `pi_${uuidv4()}`;
+		const created = (await store.create({
+			id: paymentId,
 			amount: amountCents,
 			currency: "usd",
 			status: opts.status,
 			customerId: customer.id,
-		});
+		})) as any;
+
+		// normalize created result (could be the doc or an array)
+		const payment = Array.isArray(created) ? created[0] : created;
+		const dispatchedId =
+			payment?.id ?? (payment?._id ? String(payment._id) : paymentId);
 
 		const payload = formatPaymentEvent({
 			id: `evt_${uuidv4()}`,
@@ -43,7 +49,7 @@ cmd.description("Simulate payments")
 
 		await sendWebhook(opts.target, payload);
 
-		console.log("Dispatched webhook for payment:", payment.id);
+		console.log("Dispatched webhook for payment:", dispatchedId);
 	});
 
 export default cmd;

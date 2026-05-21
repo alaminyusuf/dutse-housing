@@ -1,5 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
-import { readDb, writeDb } from "../utils/db";
+import { connectMongo, mongoose } from "../utils/db";
 
 export type CustomerRecord = {
 	id: string;
@@ -8,37 +7,59 @@ export type CustomerRecord = {
 	balance: number; // in cents
 };
 
+const schema = new mongoose.Schema(
+	{
+		id: String,
+		name: String,
+		email: String,
+		balance: Number,
+	},
+	{ collection: "customers" },
+);
+
+let CustomerModel: mongoose.Model<any>;
+
 class CustomerStoreClass {
-	create(data: { name: string; email: string; balance: number }) {
-		const db = readDb();
-		const c: CustomerRecord = {
-			id: `cus_${uuidv4()}`,
+	async ensure() {
+		if (!CustomerModel) {
+			await connectMongo();
+			CustomerModel =
+				mongoose.models.PaymentCustomer ||
+				mongoose.model("PaymentCustomer", schema);
+		}
+	}
+
+	async create(data: { name: string; email: string; balance: number }) {
+		await this.ensure();
+		const id = `cus_${new mongoose.Types.ObjectId().toString()}`;
+		const doc = await CustomerModel.create({
+			id,
 			name: data.name,
 			email: data.email,
 			balance: data.balance,
-		};
-		db.customers.push(c);
-		writeDb(db);
-		return c;
+		});
+		return doc.toObject();
 	}
 
-	findByEmailOrId(key: string) {
-		const db = readDb();
-		return db.customers.find((c) => c.email === key || c.id === key);
+	async findByEmailOrId(key: string) {
+		await this.ensure();
+		const doc = await CustomerModel.findOne({
+			$or: [{ email: key }, { id: key }],
+		}).lean();
+		return doc;
 	}
 
-	all() {
-		const db = readDb();
-		return db.customers.slice();
+	async all() {
+		await this.ensure();
+		return CustomerModel.find().lean();
 	}
 
-	update(customer: CustomerRecord) {
-		const db = readDb();
-		const idx = db.customers.findIndex((c) => c.id === customer.id);
-		if (idx !== -1) {
-			db.customers[idx] = customer;
-			writeDb(db);
-		}
+	async update(customer: CustomerRecord) {
+		await this.ensure();
+		await CustomerModel.updateOne(
+			{ id: customer.id },
+			{ $set: { ...customer } },
+		);
 	}
 }
 

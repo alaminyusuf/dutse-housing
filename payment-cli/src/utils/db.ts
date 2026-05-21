@@ -1,29 +1,17 @@
-import fs from "fs";
-import path from "path";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
 
-// Resolves to payment-cli/db.json both in src/ (ts-node-dev) and dist/ (compiled)
-const DB_FILE = path.join(__dirname, "../../db.json");
+dotenv.config();
 
-export type DbData = {
-	customers: any[];
-	payments: any[];
-	tokens: any[];
-};
+let _connected = false;
 
-export function readDb(): DbData {
-	if (!fs.existsSync(DB_FILE)) {
-		const initial: DbData = { customers: [], payments: [], tokens: [] };
-		fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), "utf8");
-		return initial;
-	}
-	try {
-		const content = fs.readFileSync(DB_FILE, "utf8");
-		return JSON.parse(content);
-	} catch (err) {
-		return { customers: [], payments: [], tokens: [] };
-	}
+export async function connectMongo() {
+	const uri = process.env.MONGO_URI;
+	if (!uri) throw new Error("MONGO_URI not set");
+	if (_connected) return mongoose;
+	await mongoose.connect(uri, { dbName: process.env.MONGO_DB || undefined });
+	_connected = true;
+	return mongoose;
 }
 
-export function writeDb(data: DbData): void {
-	fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf8");
-}
+export { mongoose };

@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 
 export default function Admin() {
 	const navigate = useNavigate();
-	const [activeTab, setActiveTab] = useState("property"); // "property" | "balance"
-	
+	const [activeTab, setActiveTab] = useState("property"); // "property" | "deposits"
+
 	// Property form state
 	const [title, setTitle] = useState("");
 	const [houseNumber, setHouseNumber] = useState("");
@@ -13,11 +13,11 @@ export default function Admin() {
 	const [price, setPrice] = useState("");
 	const [description, setDescription] = useState("");
 	const [coverImage, setCoverImage] = useState(null);
-	
-	// Balance form state
-	const [customerEmail, setCustomerEmail] = useState("");
-	const [creditAmount, setCreditAmount] = useState("");
-	
+
+	// Deposit requests state
+	const [deposits, setDeposits] = useState([]);
+	const [depositsLoading, setDepositsLoading] = useState(false);
+
 	// UI Feedback states
 	const [loading, setLoading] = useState(false);
 	const [successMsg, setSuccessMsg] = useState("");
@@ -26,10 +26,26 @@ export default function Admin() {
 	useEffect(() => {
 		const token = localStorage.getItem("token");
 		const role = localStorage.getItem("role");
-		if (!token || role !== "admin") {
-			navigate("/");
-		}
 	}, [navigate]);
+
+	useEffect(() => {
+		if (activeTab !== "deposits") return;
+		const fetchDeposits = async () => {
+			setDepositsLoading(true);
+			try {
+				const res = await axios.get("/api/admin/deposits", {
+					withCredentials: true,
+				});
+				setDeposits(res.data || []);
+			} catch (err) {
+				console.error("Failed to load deposits:", err);
+				setDeposits([]);
+			} finally {
+				setDepositsLoading(false);
+			}
+		};
+		fetchDeposits();
+	}, [activeTab]);
 
 	// Handle Property Upload
 	const handlePropertySubmit = async (e) => {
@@ -74,104 +90,176 @@ export default function Admin() {
 			// Reset file input element visually
 			const fileInput = document.getElementById("coverImage");
 			if (fileInput) fileInput.value = "";
-
 		} catch (err) {
 			console.error("Failed to add property:", err);
-			setErrorMsg(err.response?.data?.message || "Failed to add property. Verify all fields.");
+			setErrorMsg(
+				err.response?.data?.message ||
+					"Failed to add property. Verify all fields.",
+			);
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	// Handle Balance Generation
-	const handleBalanceSubmit = async (e) => {
-		e.preventDefault();
-		setLoading(true);
-		setSuccessMsg("");
-		setErrorMsg("");
-
-		if (!customerEmail || !creditAmount || Number(creditAmount) <= 0) {
-			setErrorMsg("Please provide a valid email and positive credit amount");
-			setLoading(false);
+	// Approve a pending deposit request and credit user balance
+	const handleApprove = async (id) => {
+		if (
+			!confirm("Approve this deposit request and credit the user's balance?")
+		)
 			return;
-		}
-
 		try {
-			const token = localStorage.getItem("token");
-			const res = await axios.post(
-				"/api/admin/generate-balance",
-				{
-					email: customerEmail,
-					amount: Number(creditAmount),
-				},
-				{
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				}
+			setLoading(true);
+			await axios.post(
+				`/api/admin/deposits/${id}/approve`,
+				{},
+				{ withCredentials: true },
 			);
-
-			const roundedBal = (res.data.customer.balance / 100).toLocaleString("en-US", {
-				style: "currency",
-				currency: "USD",
-			});
-			setSuccessMsg(`Successfully credited $${Number(creditAmount).toLocaleString()}! User's total balance is now ${roundedBal}.`);
-			setCustomerEmail("");
-			setCreditAmount("");
+			setSuccessMsg("Deposit approved and balance credited.");
+			setDeposits((prev) => prev.filter((d) => d._id !== id));
 		} catch (err) {
-			console.error("Failed to credit balance:", err);
-			setErrorMsg(err.response?.data?.message || "Failed to credit customer balance.");
+			console.error("Approve failed:", err);
+			setErrorMsg(
+				err.response?.data?.message || "Failed to approve deposit",
+			);
 		} finally {
 			setLoading(false);
 		}
 	};
 
 	return (
-		<div className="admin-container" style={{ maxWidth: 800, margin: "40px auto", padding: "0 20px" }}>
+		<div
+			className="admin-container"
+			style={{ maxWidth: 800, margin: "40px auto", padding: "0 20px" }}
+		>
 			<div className="admin-header" style={{ marginBottom: 32 }}>
-				<h1 className="header-title" style={{ fontSize: "2.2rem", marginBottom: 8 }}>Administrator Portal</h1>
+				<h1
+					className="header-title"
+					style={{ fontSize: "2.2rem", marginBottom: 8 }}
+				>
+					Administrator Portal
+				</h1>
 				<p className="sub-header" style={{ fontSize: "0.95rem" }}>
-					Add premium housing listings or top-up active simulated ledger customer accounts directly.
+					Add premium housing listings or top-up active simulated ledger
+					customer accounts directly.
 				</p>
 			</div>
 
 			{/* Tab Switcher */}
-			<div className="admin-tabs" style={{ display: "flex", gap: 12, borderBottom: "1px solid var(--border-color)", paddingBottom: 12, marginBottom: 32 }}>
+			<div
+				className="admin-tabs"
+				style={{
+					display: "flex",
+					gap: 12,
+					borderBottom: "1px solid var(--border-color)",
+					paddingBottom: 12,
+					marginBottom: 32,
+				}}
+			>
 				<button
-					onClick={() => { setActiveTab("property"); setSuccessMsg(""); setErrorMsg(""); }}
+					onClick={() => {
+						setActiveTab("property");
+						setSuccessMsg("");
+						setErrorMsg("");
+					}}
 					className={`btn ${activeTab === "property" ? "" : "btn-secondary"}`}
-					style={{ padding: "10px 20px", borderRadius: 8, fontSize: "0.95rem", fontWeight: 600 }}
+					style={{
+						padding: "10px 20px",
+						borderRadius: 8,
+						fontSize: "0.95rem",
+						fontWeight: 600,
+					}}
 				>
 					🏢 Add New Property
 				</button>
 				<button
-					onClick={() => { setActiveTab("balance"); setSuccessMsg(""); setErrorMsg(""); }}
-					className={`btn ${activeTab === "balance" ? "" : "btn-secondary"}`}
-					style={{ padding: "10px 20px", borderRadius: 8, fontSize: "0.95rem", fontWeight: 600 }}
+					onClick={() => {
+						setActiveTab("deposits");
+						setSuccessMsg("");
+						setErrorMsg("");
+					}}
+					className={`btn ${activeTab === "deposits" ? "" : "btn-secondary"}`}
+					style={{
+						padding: "10px 20px",
+						borderRadius: 8,
+						fontSize: "0.95rem",
+						fontWeight: 600,
+					}}
 				>
-					💳 Credit User Balance
+					📥 Pending Deposits
 				</button>
 			</div>
 
 			{/* Notifications */}
 			{successMsg && (
-				<div className="alert alert-success" style={{ backgroundColor: "#e6f4ea", color: "#137333", border: "1px solid #c2e7cd", padding: 16, borderRadius: 8, marginBottom: 24, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: 8 }}>
+				<div
+					className="alert alert-success"
+					style={{
+						backgroundColor: "#e6f4ea",
+						color: "#137333",
+						border: "1px solid #c2e7cd",
+						padding: 16,
+						borderRadius: 8,
+						marginBottom: 24,
+						fontSize: "0.95rem",
+						display: "flex",
+						alignItems: "center",
+						gap: 8,
+					}}
+				>
 					<span>✅ {successMsg}</span>
 				</div>
 			)}
 			{errorMsg && (
-				<div className="alert alert-error" style={{ backgroundColor: "#fce8e6", color: "#c5221f", border: "1px solid #fad2cf", padding: 16, borderRadius: 8, marginBottom: 24, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: 8 }}>
+				<div
+					className="alert alert-error"
+					style={{
+						backgroundColor: "#fce8e6",
+						color: "#c5221f",
+						border: "1px solid #fad2cf",
+						padding: 16,
+						borderRadius: 8,
+						marginBottom: 24,
+						fontSize: "0.95rem",
+						display: "flex",
+						alignItems: "center",
+						gap: 8,
+					}}
+				>
 					<span>⚠️ {errorMsg}</span>
 				</div>
 			)}
 
 			{/* Tab 1: Add Property Form */}
 			{activeTab === "property" && (
-				<div className="form-card" style={{ background: "rgba(255, 255, 255, 0.7)", backdropFilter: "blur(10px)", border: "1px solid var(--border-color)", padding: 32, borderRadius: 16, boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.04)" }}>
-					<h3 style={{ fontSize: "1.3rem", fontWeight: 600, marginBottom: 24 }}>Listing Information</h3>
+				<div
+					className="form-card"
+					style={{
+						background: "rgba(255, 255, 255, 0.7)",
+						backdropFilter: "blur(10px)",
+						border: "1px solid var(--border-color)",
+						padding: 32,
+						borderRadius: 16,
+						boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.04)",
+					}}
+				>
+					<h3
+						style={{
+							fontSize: "1.3rem",
+							fontWeight: 600,
+							marginBottom: 24,
+						}}
+					>
+						Listing Information
+					</h3>
 					<form onSubmit={handlePropertySubmit}>
 						<div className="form-group" style={{ marginBottom: 20 }}>
-							<label htmlFor="title" className="form-label" style={{ fontWeight: 600 }}>Property Title *</label>
+							<label
+								htmlFor="title"
+								className="form-label"
+								style={{ fontWeight: 600 }}
+							>
+								Property Title *
+							</label>
 							<input
 								id="title"
 								type="text"
@@ -183,9 +271,22 @@ export default function Admin() {
 							/>
 						</div>
 
-						<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+						<div
+							style={{
+								display: "grid",
+								gridTemplateColumns: "1fr 1fr",
+								gap: 20,
+								marginBottom: 20,
+							}}
+						>
 							<div className="form-group">
-								<label htmlFor="houseNumber" className="form-label" style={{ fontWeight: 600 }}>House Number *</label>
+								<label
+									htmlFor="houseNumber"
+									className="form-label"
+									style={{ fontWeight: 600 }}
+								>
+									House Number *
+								</label>
 								<input
 									id="houseNumber"
 									type="text"
@@ -197,7 +298,13 @@ export default function Admin() {
 								/>
 							</div>
 							<div className="form-group">
-								<label htmlFor="location" className="form-label" style={{ fontWeight: 600 }}>Location *</label>
+								<label
+									htmlFor="location"
+									className="form-label"
+									style={{ fontWeight: 600 }}
+								>
+									Location *
+								</label>
 								<input
 									id="location"
 									type="text"
@@ -210,9 +317,22 @@ export default function Admin() {
 							</div>
 						</div>
 
-						<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+						<div
+							style={{
+								display: "grid",
+								gridTemplateColumns: "1fr 1fr",
+								gap: 20,
+								marginBottom: 20,
+							}}
+						>
 							<div className="form-group">
-								<label htmlFor="price" className="form-label" style={{ fontWeight: 600 }}>Price in USD ($) *</label>
+								<label
+									htmlFor="price"
+									className="form-label"
+									style={{ fontWeight: 600 }}
+								>
+									Price in USD ($) *
+								</label>
 								<input
 									id="price"
 									type="number"
@@ -224,7 +344,13 @@ export default function Admin() {
 								/>
 							</div>
 							<div className="form-group">
-								<label htmlFor="coverImage" className="form-label" style={{ fontWeight: 600 }}>Cover Image</label>
+								<label
+									htmlFor="coverImage"
+									className="form-label"
+									style={{ fontWeight: 600 }}
+								>
+									Cover Image
+								</label>
 								<input
 									id="coverImage"
 									type="file"
@@ -237,7 +363,13 @@ export default function Admin() {
 						</div>
 
 						<div className="form-group" style={{ marginBottom: 32 }}>
-							<label htmlFor="description" className="form-label" style={{ fontWeight: 600 }}>Listing Description</label>
+							<label
+								htmlFor="description"
+								className="form-label"
+								style={{ fontWeight: 600 }}
+							>
+								Listing Description
+							</label>
 							<textarea
 								id="description"
 								placeholder="Enter general amenities, size details, or proximity info..."
@@ -249,51 +381,124 @@ export default function Admin() {
 							/>
 						</div>
 
-						<button type="submit" className="btn" style={{ width: "100%", padding: "14px 20px" }} disabled={loading}>
+						<button
+							type="submit"
+							className="btn"
+							style={{ width: "100%", padding: "14px 20px" }}
+							disabled={loading}
+						>
 							{loading ? "Adding Listing..." : "✨ Publish Listing"}
 						</button>
 					</form>
 				</div>
 			)}
 
-			{/* Tab 2: Generate Balance Form */}
-			{activeTab === "balance" && (
-				<div className="form-card" style={{ background: "rgba(255, 255, 255, 0.7)", backdropFilter: "blur(10px)", border: "1px solid var(--border-color)", padding: 32, borderRadius: 16, boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.04)" }}>
-					<h3 style={{ fontSize: "1.3rem", fontWeight: 600, marginBottom: 12 }}>Top-up Ledger Credit</h3>
-					<p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", marginBottom: 28 }}>
-						Simulate funds credit for customers to verify local checkout transactions without needing terminal scripts.
+			{/* Tab 2: Pending Deposits */}
+			{activeTab === "deposits" && (
+				<div
+					className="form-card"
+					style={{
+						background: "rgba(255, 255, 255, 0.7)",
+						backdropFilter: "blur(10px)",
+						border: "1px solid var(--border-color)",
+						padding: 16,
+						borderRadius: 16,
+						boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.04)",
+					}}
+				>
+					<h3
+						style={{
+							fontSize: "1.3rem",
+							fontWeight: 600,
+							marginBottom: 12,
+						}}
+					>
+						Pending Deposit Requests
+					</h3>
+					<p
+						style={{
+							fontSize: "0.88rem",
+							color: "var(--text-secondary)",
+							marginBottom: 12,
+						}}
+					>
+						Review deposit requests submitted by users and approve to
+						credit their balances.
 					</p>
-					<form onSubmit={handleBalanceSubmit}>
-						<div className="form-group" style={{ marginBottom: 20 }}>
-							<label htmlFor="customerEmail" className="form-label" style={{ fontWeight: 600 }}>Customer Email Address *</label>
-							<input
-								id="customerEmail"
-								type="email"
-								placeholder="e.g. alice@example.com"
-								value={customerEmail}
-								onChange={(e) => setCustomerEmail(e.target.value)}
-								className="form-input"
-								required
-							/>
+					{depositsLoading ? (
+						<div
+							style={{
+								padding: 24,
+								textAlign: "center",
+								color: "var(--text-secondary)",
+							}}
+						>
+							Loading...
 						</div>
-
-						<div className="form-group" style={{ marginBottom: 32 }}>
-							<label htmlFor="creditAmount" className="form-label" style={{ fontWeight: 600 }}>Amount to Credit in USD ($) *</label>
-							<input
-								id="creditAmount"
-								type="number"
-								placeholder="e.g. 150000"
-								value={creditAmount}
-								onChange={(e) => setCreditAmount(e.target.value)}
-								className="form-input"
-								required
-							/>
+					) : deposits.length === 0 ? (
+						<div
+							style={{
+								padding: 24,
+								textAlign: "center",
+								color: "var(--text-secondary)",
+							}}
+						>
+							No pending deposits.
 						</div>
-
-						<button type="submit" className="btn" style={{ width: "100%", padding: "14px 20px" }} disabled={loading}>
-							{loading ? "Processing Credit..." : "💳 Top-up Customer Balance"}
-						</button>
-					</form>
+					) : (
+						<div style={{ display: "grid", gap: 12 }}>
+							{deposits.map((d) => (
+								<div
+									key={d._id}
+									style={{
+										border: "1px solid var(--border-color)",
+										padding: 12,
+										borderRadius: 8,
+										display: "flex",
+										justifyContent: "space-between",
+										alignItems: "center",
+									}}
+								>
+									<div>
+										<div style={{ fontWeight: 700 }}>
+											{d.user?.name || d.user?.email}
+										</div>
+										<div
+											style={{
+												fontSize: "0.9rem",
+												color: "var(--text-secondary)",
+											}}
+										>
+											{d.user?.email}
+										</div>
+										<div style={{ marginTop: 6 }}>
+											Amount: ₦
+											{((d.amountCents || 0) / 100).toLocaleString()}
+										</div>
+										<div
+											style={{
+												fontSize: "0.85rem",
+												color: "var(--text-secondary)",
+											}}
+										>
+											Status: {d.status}
+										</div>
+									</div>
+									<div style={{ display: "flex", gap: 8 }}>
+										{d.status === "pending" && (
+											<button
+												className="btn btn-primary"
+												onClick={() => handleApprove(d._id)}
+												disabled={loading}
+											>
+												{loading ? "Approving..." : "Approve"}
+											</button>
+										)}
+									</div>
+								</div>
+							))}
+						</div>
+					)}
 				</div>
 			)}
 		</div>

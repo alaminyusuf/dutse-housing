@@ -34,11 +34,19 @@ export function createServer({
 	});
 
 	router.post("/checkout/create-session", async (ctx) => {
-		const { pin, userId, propertyId, amount, sessionId: reqSessionId } = (ctx.request as any).body;
+		const {
+			pin,
+			userId,
+			propertyId,
+			amount,
+			sessionId: reqSessionId,
+		} = (ctx.request as any).body;
 
 		if (!pin || !userId || !propertyId || !amount) {
 			ctx.status = 400;
-			ctx.body = { error: "Missing required fields: pin, userId, propertyId, amount" };
+			ctx.body = {
+				error: "Missing required fields: pin, userId, propertyId, amount",
+			};
 			return;
 		}
 
@@ -46,8 +54,8 @@ export function createServer({
 		const customerStore = CustomerStore.getInstance();
 		const paymentStore = PaymentStore.getInstance();
 
-		// 1. Find token by 4-digit PIN
-		const tokenRecord = tokenStore.findByPin(pin);
+		// 1. Find token by 4-digit PIN (stores are async now)
+		const tokenRecord = (await tokenStore.findByPin(pin)) as any;
 		if (!tokenRecord) {
 			ctx.status = 400;
 			ctx.body = { error: "Invalid payment PIN or PIN already used" };
@@ -55,7 +63,9 @@ export function createServer({
 		}
 
 		// 2. Find customer
-		const customer = customerStore.findByEmailOrId(tokenRecord.customerId);
+		const customer = (await customerStore.findByEmailOrId(
+			tokenRecord.customerId,
+		)) as any;
 		if (!customer) {
 			ctx.status = 400;
 			ctx.body = { error: "Customer not found for this token" };
@@ -63,32 +73,34 @@ export function createServer({
 		}
 
 		// 3. Verify balance (amount is in cents, customer balance is in cents)
-		if (customer.balance < amount) {
+		if ((customer.balance || 0) < amount) {
 			ctx.status = 400;
 			ctx.body = {
-				error: `Insufficient balance. Required: $${(amount / 100).toFixed(2)}, Current: $${(customer.balance / 100).toFixed(2)}`
+				error: `Insufficient balance. Required: $${(amount / 100).toFixed(2)}, Current: $${((customer.balance || 0) / 100).toFixed(2)}`,
 			};
 			return;
 		}
 
 		// 4. Process payment
 		customer.balance -= amount;
-		customerStore.update(customer);
+		await customerStore.update(customer as any);
 
 		tokenRecord.status = "used";
-		tokenStore.update(tokenRecord);
+		await tokenStore.update(tokenRecord as any);
 
 		const paymentId = `pi_${uuidv4().replace(/-/g, "").substring(0, 16)}`;
-		paymentStore.create({
+		await paymentStore.create({
 			id: paymentId,
 			amount,
 			currency: "usd",
 			status: "succeeded",
 			customerId: customer.id,
-		});
+		} as any);
 
 		// Use passed sessionId if present, otherwise generate new one
-		const sessionId = reqSessionId || `cs_test_${uuidv4().replace(/-/g, "").substring(0, 20)}`;
+		const sessionId =
+			reqSessionId ||
+			`cs_test_${uuidv4().replace(/-/g, "").substring(0, 20)}`;
 
 		// 5. Build and fire webhook event
 		const webhookPayload = {
@@ -112,7 +124,10 @@ export function createServer({
 			await sendWebhook(target, webhookPayload);
 		} catch (err: any) {
 			// Log webhook send failure but don't fail checkout since charge succeeded
-			console.error("Failed to forward payment webhook:", err.message || err);
+			console.error(
+				"Failed to forward payment webhook:",
+				err.message || err,
+			);
 		}
 
 		// 6. Return standard Stripe-like checkout session response
@@ -140,31 +155,31 @@ export function createServer({
 		const customerStore = CustomerStore.getInstance();
 		const balanceCents = Math.round(Number(balance));
 
-		// Find or create customer
-		let customer = customerStore.findByEmailOrId(email);
+		// Find or create customer (async store)
+		let customer = (await customerStore.findByEmailOrId(email)) as any;
 		if (customer) {
-			customer.balance += balanceCents;
-			customerStore.update(customer);
+			customer.balance = (customer.balance || 0) + balanceCents;
+			await customerStore.update(customer as any);
 		} else {
 			// Extract a friendly name from email prefix
 			const prefix = email.split("@")[0];
 			const friendlyName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-			
-			customer = customerStore.create({
+
+			customer = (await customerStore.create({
 				name: friendlyName,
 				email,
 				balance: balanceCents,
-			});
+			})) as any;
 		}
 
 		ctx.status = 200;
 		ctx.body = {
 			message: "Balance generated successfully",
 			customer: {
-				id: customer.id,
-				name: customer.name,
-				email: customer.email,
-				balance: customer.balance,
+				id: customer!.id,
+				name: customer!.name,
+				email: customer!.email,
+				balance: customer!.balance,
 			},
 		};
 	});
