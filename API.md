@@ -40,13 +40,31 @@ Get a single property by ID.
 
 Create a Stripe Checkout session for a property purchase.
 
-- Body: `{ propertyId }`
-- Auth: Bearer token required
-- Returns: `{ url, id }`
+## Deposits (New)
 
----
+### POST /api/deposit/generate
 
-## Orders
+Create a deposit request that an admin must approve. This replaces the older
+token-based flow.
+
+- Body: `{ amount, pin }` (dollars, pin is 4 digits)
+- Auth: Cookie or Bearer token required
+- Returns: `{ message: 'Deposit request created and pending approval' }`
+
+### GET /api/admin/deposits
+
+List pending and historical deposit requests. Requires admin credentials.
+
+- Auth: Admin (cookie or Bearer token)
+- Returns: `DepositRequest[]` (populated `user` field)
+
+### POST /api/admin/deposits/:id/approve
+
+Approve a pending deposit request. Credits the user's `balance` (stored in
+cents) and marks the deposit as approved.
+
+- Auth: Admin (cookie or Bearer token)
+- Returns: `{ deposit, newBalanceCents }`
 
 ### GET /api/orders/me
 

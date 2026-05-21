@@ -52,5 +52,9 @@ app.use("/api/deposit", require("./routes/deposit"));
 // Health check route
 app.get("/", (req, res) => res.send("Dutse Housing API"));
 
-// Start server
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Start server when run directly (keep exportable for tests)
+if (require.main === module) {
+	app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+module.exports = app;
