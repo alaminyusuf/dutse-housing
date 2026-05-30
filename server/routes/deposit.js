@@ -28,7 +28,7 @@ router.post("/generate", auth, async (req, res) => {
 		const ok = await bcrypt.compare(pin, user.pinHash);
 		if (!ok) return res.status(401).json({ message: "Invalid PIN" });
 
-		const amountCents = Math.round(Number(amount) * 100);
+		const amountCents = Math.round(Number(amount));
 		const dr = new DepositRequest({ user: user._id, amountCents });
 		await dr.save();
 

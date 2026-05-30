@@ -97,8 +97,8 @@ export default function Dashboard() {
 						color: "var(--text-secondary)",
 					}}
 				>
-					<strong>Balance:</strong> $
-					{(user.balance / 100).toLocaleString()}
+					<strong>Balance:</strong> N
+					{(user.balance).toLocaleString()}
 				</div>
 			)}
 			<p className="sub-header">

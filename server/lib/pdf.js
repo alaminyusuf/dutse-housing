@@ -73,13 +73,6 @@ async function generateCertificate({ orderId, user, property }) {
 				.fillColor("#1a1a1a")
 				.text(displayName, { align: "center" });
 
-			// Thin line under buyer name
-			doc.moveTo(220, 205)
-				.lineTo(pageWidth - 220, 205)
-				.lineWidth(0.8)
-				.strokeColor("#a0a0a0")
-				.stroke();
-
 			// 6. "Is the legal owner of"
 			doc.moveDown(1.8);
 			doc.font("Times-Roman")
