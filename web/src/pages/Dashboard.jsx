@@ -48,7 +48,7 @@ export default function Dashboard() {
 		try {
 			const res = await axios.post(
 				"/api/deposit/generate",
-				{ amount: Math.round(amt * 100), pin: reqPin },
+				{ amount: Math.round(amt), pin: reqPin },
 				{ withCredentials: true },
 			);
 			setReqAmount("");

@@ -473,7 +473,7 @@ export default function Admin() {
 										</div>
 										<div style={{ marginTop: 6 }}>
 											Amount: ₦
-											{((d.amountCents || 0) / 100).toLocaleString()}
+											{((d.amountCents || 0) ).toLocaleString()}
 										</div>
 										<div
 											style={{

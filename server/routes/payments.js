@@ -39,7 +39,7 @@ router.post("/charge", auth, async (req, res) => {
 		if (property.sold)
 			return res.status(400).json({ message: "Property already sold" });
 
-		const amountCents = Math.round((property.price || 0) * 100);
+		const amountCents = Math.round((property.price || 0));
 		const balance = user.balance || 0;
 		if (balance < amountCents)
 			return res.status(402).json({ message: "Insufficient funds" });
