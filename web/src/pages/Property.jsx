@@ -17,7 +17,7 @@ export default function Property() {
 	}, [id]);
 
 	const buy = async () => {
-		if (!token) return alert("Please login/register first");
+		// if (!token) return alert("Please login/register first");
 		if (!paymentPin) return alert("Please enter your 4-Digit Payment PIN");
 		if (paymentPin.length !== 4 || isNaN(Number(paymentPin))) {
 			return alert("Please enter a valid 4-digit numeric PIN (e.g. 1234)");

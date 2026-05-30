@@ -8,6 +8,7 @@ const auth = require("../middleware/auth");
 const User = require("../models/User");
 const Property = require("../models/Property");
 const Order = require("../models/Order");
+const { generateCertificate } = require("../lib/pdf");
 
 /**
  * Charge a property using the authenticated user's balance after PIN confirmation.
@@ -46,13 +47,21 @@ router.post("/charge", auth, async (req, res) => {
 		user.balance = balance - amountCents;
 		await user.save();
 
+		
 		const order = new Order({
 			user: user._id,
 			property: property._id,
 			amount: property.price,
 			status: "paid",
+
 		});
-		await order.save();
+		const pdf = await generateCertificate({
+				orderId: order._id.toString(),
+				user,
+				property,
+			});
+			order.pdfPath = pdf;
+			await order.save();
 
 		property.sold = true;
 		await property.save();

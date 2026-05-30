@@ -54,7 +54,7 @@ router.post("/create-session", async (req, res) => {
 			property: property._id,
 			amount: property.price,
 			status: "pending",
-			stripeSessionId: sessionId,
+			
 		});
 		await order.save();
 

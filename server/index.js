@@ -42,7 +42,6 @@ connectDB();
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/properties", require("./routes/properties"));
 app.use("/api/checkout", require("./routes/checkout"));
-app.use("/api/webhook", require("./routes/webhook"));
 app.use("/api/orders", require("./routes/orders"));
 app.use("/api/admin", require("./routes/admin"));
 // Payments and deposit endpoints

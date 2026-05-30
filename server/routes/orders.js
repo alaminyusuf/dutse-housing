@@ -36,12 +36,14 @@ router.get("/me", auth, async (req, res) => {
 router.get("/:id/pdf", auth, async (req, res) => {
 	try {
 		const order = await Order.findById(req.params.id).populate("property");
+		console.log('Order PDF', order)
 		if (!order) return res.status(404).json({ message: "Order not found" });
 		if (order.user.toString() !== req.userId)
 			return res.status(403).json({ message: "Forbidden" });
 		if (!order.pdfPath)
 			return res.status(404).json({ message: "PDF not available" });
 		const filePath = path.resolve(order.pdfPath);
+		console.log('File path', filePath)
 		if (!fs.existsSync(filePath))
 			return res.status(404).json({ message: "File not found" });
 		res.download(filePath);

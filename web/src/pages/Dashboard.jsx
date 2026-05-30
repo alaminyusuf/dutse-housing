@@ -38,7 +38,6 @@ export default function Dashboard() {
 		fetchUser();
 	}, []);
 
-	console.log(orders[0]);
 	const requestDeposit = async (e) => {
 		e && e.preventDefault();
 		if (!/^[0-9]{4}$/.test(reqPin))
