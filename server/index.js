@@ -15,14 +15,7 @@ const connectDB = require("./config/db");
 dotenv.config();
 
 const app = express();
-// Parse JSON and keep raw body for Stripe webhook signature verification
-app.use(
-	express.json({
-		verify: (req, res, buf) => {
-			req.rawBody = buf;
-		},
-	}),
-);
+app.use(express.json());
 // Enable CORS for client
 app.use(cors({ origin: process.env.CLIENT_URL || true, credentials: true }));
 // Parse cookies for cookie-based auth
@@ -41,7 +34,6 @@ connectDB();
 // Mount API routes
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/properties", require("./routes/properties"));
-app.use("/api/checkout", require("./routes/checkout"));
 app.use("/api/orders", require("./routes/orders"));
 app.use("/api/admin", require("./routes/admin"));
 // Payments and deposit endpoints
